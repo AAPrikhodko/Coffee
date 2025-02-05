@@ -21,7 +21,7 @@ struct HomeTabView: View {
             .padding(.bottom)
         
         AddDrinkButton(showAddDrinkSheet: $showAddDrinkSheet)
-            .sheet(isPresented: $showAddDrinkSheet) {
+            .fullScreenCover(isPresented: $showAddDrinkSheet) {
                 AddRecordView(isSheetShown: $showAddDrinkSheet)
             }
             

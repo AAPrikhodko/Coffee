@@ -6,6 +6,8 @@
 //
 
 import Foundation
+import CoreLocation
+import MapKit
 
 @Observable
 class RecordsViewModel {
@@ -15,9 +17,11 @@ class RecordsViewModel {
             type: .americano,
             size: ._300,
             price: 10,
+            date: Date(),
             place: Place(
                 id: UUID(),
-                name: "Starbucks",
+                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
+                address: "",
                 type: .cafe
             )
         ),
@@ -26,9 +30,11 @@ class RecordsViewModel {
             type: .cappuccino,
             size: ._200,
             price: 12.99,
+            date: Date(),
             place: Place(
                 id: UUID(),
-                name: "Starhit",
+                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
+                address: "",
                 type: .cafe
             )
         ),
@@ -37,9 +43,11 @@ class RecordsViewModel {
             type: .espresso,
             size: ._100,
             price: 7.55,
+            date: Date(),
             place: Place(
                 id: UUID(),
-                name: "Raddisson",
+                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
+                address: "",
                 type: .hotel
             )
         ),
@@ -48,9 +56,11 @@ class RecordsViewModel {
             type: .latte,
             size: ._400,
             price: 15.00,
+            date: Date(),
             place: Place(
                 id: UUID(),
-                name: "Hotel InterContinental",
+                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
+                address: "",
                 type: .hotel
             )
         ),

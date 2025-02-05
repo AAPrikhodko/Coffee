@@ -7,6 +7,7 @@
 
 import Foundation
 import MapKit
+import SwiftUICore
 
 class LocationSearchViewModel: NSObject, ObservableObject {
     
@@ -15,6 +16,8 @@ class LocationSearchViewModel: NSObject, ObservableObject {
     @Published var results: [MKLocalSearchCompletion] = []
     @Published var selectedlocationCoordinate: CLLocationCoordinate2D?
     @Published var selectedLoationAddress: String?
+    
+    @EnvironmentObject var recordViewModel: NewRecordViewModel
     
     private let searchCompleter = MKLocalSearchCompleter()
     var queryFragment : String = "" {
@@ -42,6 +45,7 @@ class LocationSearchViewModel: NSObject, ObservableObject {
             }
             guard let item = response?.mapItems.first else { return }
             let coordinate = item.placemark.coordinate
+
             let street = item.placemark.thoroughfare ?? ""
             let city = item.placemark.locality ?? ""
             let country = item.placemark.country ?? ""
@@ -50,8 +54,8 @@ class LocationSearchViewModel: NSObject, ObservableObject {
             self.selectedLoationAddress = "\(houseNumber) \(street), \(city), \(country)"
             self.selectedlocationCoordinate = coordinate
             
-            print("DEBUG: Selected coordinate: \(coordinate)")
-            print("DEBUG: Selected address: \(self.selectedLoationAddress ?? "")")
+            
+
         }
     }
     

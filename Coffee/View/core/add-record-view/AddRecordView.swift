@@ -10,28 +10,11 @@ import MapKit
 
 struct AddRecordView: View {
     @Binding var isSheetShown: Bool
-    @State private var newRecord: Record = Record(
-        id: UUID(),
-        type: .americano,
-        size: ._300,
-        price: 0,
-        place: Place(
-            id: UUID(),
-            name: "",
-            type: .cafe
-        )
-    )
     
-    @State private var selectedCoffeeType: CoffeeType = .americano
-    @State private var selectedSize: CoffeeSize = ._300
-    @State private var price: Double = 2.99
-    @State private var selectedDate = Date()
-    @State private var selectedPlaceType: PlaceType = .cafe
-    
-    @State private var address: String = ""
-    @State private var coordinate: CLLocationCoordinate2D?
+    @StateObject var recordViewModel = NewRecordViewModel()
     
     @State private var newRecordState: NewRecordState = .collectingData
+    let mapView = MKMapView()
     
     var body: some View {
         ZStack {
@@ -39,14 +22,14 @@ struct AddRecordView: View {
                 NavigationStack{
                     Form {
                         Section("What drink?") {
-                            Picker("Type", selection: $selectedCoffeeType) {
+                            Picker("Type", selection: $recordViewModel.record.type) {
                                 ForEach(CoffeeType.allCases, id: \.self) { type in
                                     Text(type.title).tag(type)
                                 }
                             }
                             .pickerStyle(.navigationLink)
                             
-                            Picker("Size", selection: $selectedSize) {
+                            Picker("Size", selection: $recordViewModel.record.size) {
                                 ForEach(CoffeeSize.allCases, id: \.self) { size in
                                     Text(size.title + "ml").tag(size)
                                 }
@@ -56,7 +39,7 @@ struct AddRecordView: View {
                             HStack {
                                 Text("Price:")
                                 Spacer()
-                                Text("$ " + "\(String(format: "%.2f", price))")
+                                Text("$ " + "\(String(format: "%.2f", recordViewModel.record.price))")
                                     .foregroundStyle(.gray)
                             }
                         }
@@ -64,14 +47,14 @@ struct AddRecordView: View {
                         Section("What date?") {
                             DatePicker(
                                 "Date",
-                                selection: $selectedDate,
+                                selection: $recordViewModel.record.date,
                                 displayedComponents: .date
                             )
                          .datePickerStyle(CompactDatePickerStyle())
                         }
                         
                         Section("What place?") {
-                            MapViewRepresentable()
+                            MapViewRepresentable(mapView: mapView, recordViewModel: recordViewModel)
                                 .frame(height: 200)
                                 .listRowInsets(EdgeInsets())
                                 .onTapGesture {
@@ -80,9 +63,9 @@ struct AddRecordView: View {
                                     }
                                 }
                             
-                            TextField("Address", text: $address)
+                            Text(recordViewModel.record.place.address)
                             
-                            Picker("Type", selection: $selectedPlaceType) {
+                            Picker("Type", selection: $recordViewModel.record.place.type) {
                                 ForEach(PlaceType.allCases, id: \.self) { type in
                                     Text(type.title).tag(type)
                                 }
@@ -107,7 +90,7 @@ struct AddRecordView: View {
                     }
                 }
             } else {
-                FullMapView(newRecordState: $newRecordState)
+                FullMapView(newRecordState: $newRecordState, recordViewModel: recordViewModel, mapView: mapView)
             }
         }
     }
@@ -115,5 +98,4 @@ struct AddRecordView: View {
 
 #Preview {
     AddRecordView(isSheetShown: .constant(false))
-        .environmentObject(LocationSearchViewModel())
 }

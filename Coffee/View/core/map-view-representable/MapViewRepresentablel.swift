@@ -10,9 +10,11 @@ import MapKit
 
 struct MapViewRepresentable: UIViewRepresentable {
     
-    let mapView = MKMapView()
+    var mapView: MKMapView
     let locationManager = LocationManager()
-    @EnvironmentObject var locationViewModel: LocationSearchViewModel
+    
+    @EnvironmentObject var locationSearchViewModel: LocationSearchViewModel
+    var recordViewModel: NewRecordViewModel
     
     func makeUIView(context: Context) -> MKMapView {
         mapView.delegate = context.coordinator
@@ -20,14 +22,16 @@ struct MapViewRepresentable: UIViewRepresentable {
         mapView.showsUserLocation = true
         mapView.userTrackingMode = .follow
         
-        print("DEBUG: results is \(locationViewModel.results)")
-        
         return mapView
     }
     
     func updateUIView(_ view: MKMapView, context: Context) {
-        if let coordinate = locationViewModel.selectedlocationCoordinate {
+        
+        if let coordinate = locationSearchViewModel.selectedlocationCoordinate {
             context.coordinator.addAndSelectAnnotation(withCoordinate: coordinate)
+        }
+        if let address = locationSearchViewModel.selectedLoationAddress {
+            context.coordinator.updateRecordAddressIfNeeded(address)
         }
     }
     
@@ -66,6 +70,12 @@ extension MapViewRepresentable {
                 )
             )
             
+            if let location = userLocation.location {
+                parent.recordViewModel.updateLocation(location)
+                parent.recordViewModel.updateAddressByLocation(location)
+                addAndSelectAnnotation(withCoordinate: location.coordinate)
+            }
+            
             parent.mapView.setRegion(region, animated: true)
         }
         
@@ -79,6 +89,13 @@ extension MapViewRepresentable {
             parent.mapView.addAnnotation(annotation)
             parent.mapView.selectAnnotation(annotation, animated: true)
             parent.mapView.showAnnotations([annotation], animated: true)
+        }
+        
+        func updateRecordAddressIfNeeded(_ newAddress: String) {
+            guard parent.recordViewModel.record.place.address != newAddress else { return } // Prevent unnecessary updates
+            DispatchQueue.main.async { // It always runs safely on the main thread
+                self.parent.recordViewModel.updateAddress(newAddress)
+            }
         }
     }
 }

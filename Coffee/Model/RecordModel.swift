@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import MapKit
 
 struct Record: Identifiable, Hashable {
     var id: UUID
@@ -13,12 +14,15 @@ struct Record: Identifiable, Hashable {
     var type: CoffeeType
     var size: CoffeeSize
     var price: Double
+    var date: Date
     var place: Place
 }
 
 struct Place: Identifiable, Hashable {
     var id: UUID
-    var name: String
+    
+    var location: CLLocation?
+    var address: String
     var type: PlaceType
 }
 
@@ -133,4 +137,10 @@ enum CoffeeSize: Int, Identifiable, CaseIterable, Hashable {
     }
 
     var id: Int { return self.rawValue }
+}
+
+enum NewRecordState {
+    case collectingData
+    case fullMap
+    case searchLocations
 }
