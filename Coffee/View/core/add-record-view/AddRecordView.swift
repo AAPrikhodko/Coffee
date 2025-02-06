@@ -51,6 +51,7 @@ struct AddRecordView: View {
                     
                     Section("What place?") {
                         LocationPickerView()
+                            .listRowInsets(EdgeInsets())
                         
                         Text(recordViewModel.record.place.address)
                         
@@ -83,5 +84,5 @@ struct AddRecordView: View {
 }
 
 #Preview {
-    AddRecordView(isSheetShown: .constant(false))
+    AddRecordView(isSheetShown: .constant(true))
 }

@@ -14,17 +14,23 @@ struct LocationPickerView: View {
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            PreviewMapView(navigationPath: $navigationPath)
-                .navigationDestination(for: LocationPickerRoute.self) { route in
-                    switch (route) {
-                    case .previewMap:
-                        PreviewMapView(navigationPath: $navigationPath)
-                    case .fullMap:
-                        FullMapView2(navigationPath: $navigationPath)
-                    case .searchLocations:
-                        SearchLocationsView(navigationPath: $navigationPath)
-                    }
+            PreviewMapView(
+                navigationPath: $navigationPath,
+                locationViewModel: $locationViewModel
+            )
+            .navigationDestination(for: LocationPickerRoute.self) { route in
+                switch (route) {
+                case .previewMap:
+                    PreviewMapView(
+                        navigationPath: $navigationPath,
+                        locationViewModel: $locationViewModel
+                    )
+                case .fullMap:
+                    FullMapView2(navigationPath: $navigationPath)
+                case .searchLocations:
+                    SearchLocationsView(navigationPath: $navigationPath)
                 }
+            }
         }
     }
 }
