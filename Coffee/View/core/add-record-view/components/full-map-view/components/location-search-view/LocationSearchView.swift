@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct LocationSearchView: View {
-    @Binding var newRecordState: NewRecordState
     @EnvironmentObject var viewModel: LocationSearchViewModel
     
     var body: some View {
@@ -42,7 +41,6 @@ struct LocationSearchView: View {
                             .onTapGesture {
                                 withAnimation(.spring()) {
                                     viewModel.selectLocation(result)
-                                    newRecordState = .fullMap
                                 }
                             }
                     }
@@ -55,6 +53,5 @@ struct LocationSearchView: View {
 }
 
 #Preview {
-    LocationSearchView(newRecordState: .constant(.searchLocations))
-        .environmentObject(LocationSearchViewModel())
+    LocationSearchView()
 }

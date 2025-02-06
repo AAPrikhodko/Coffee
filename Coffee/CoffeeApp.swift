@@ -9,12 +9,9 @@ import SwiftUI
 
 @main
 struct CoffeeApp: App {
-    @StateObject var locationSearchViewModel = LocationSearchViewModel()
-    
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(locationSearchViewModel)
         }
     }
 }

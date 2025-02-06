@@ -54,7 +54,7 @@ struct FullMapView: View {
                 .frame(maxHeight: .infinity, alignment: .bottom)
             }
         } else if (newRecordState == .searchLocations){
-            LocationSearchView(newRecordState: $newRecordState)
+            LocationSearchView()
         }
     }
 }
