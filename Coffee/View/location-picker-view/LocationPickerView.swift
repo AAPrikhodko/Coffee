@@ -26,7 +26,10 @@ struct LocationPickerView: View {
                         locationViewModel: $locationViewModel
                     )
                 case .fullMap:
-                    FullMapView2(navigationPath: $navigationPath)
+                    FullMapView2(
+                        navigationPath: $navigationPath,
+                        locationViewModel: $locationViewModel
+                    )
                 case .searchLocations:
                     SearchLocationsView(navigationPath: $navigationPath)
                 }
