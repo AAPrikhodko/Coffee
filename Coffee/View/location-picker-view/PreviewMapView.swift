@@ -12,24 +12,34 @@ struct PreviewMapView: View {
     @Binding var navigationPath: [LocationPickerRoute]
     @Binding var locationViewModel: LocationViewModel
     
-    @State private var mapCameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
-            span: MKCoordinateSpan(latitudeDelta: 90, longitudeDelta: 180)
-        )
-    )
+    @State private var mapCameraPosition: MapCameraPosition = .automatic
     
     var body: some View {
-        Map(position: $mapCameraPosition)
-            .frame(height: 200)
-            .onChange(of: locationViewModel.currentLocationRegion) { _, equatableRegion in
-                mapCameraPosition = .region(equatableRegion.mkRegion)
+        Map(position: $mapCameraPosition, interactionModes: []) {
+            if (locationViewModel.currentLocation != nil) {
+                Marker("Curent Location", coordinate: locationViewModel.currentLocation!.coordinate)
+                    .annotationTitles(.hidden)
             }
-            .onTapGesture {
-                withAnimation(.spring()) {
-                    navigationPath.append(.fullMap)
-                }
+        }
+        .frame(height: 200)
+        .onChange(of: locationViewModel.currentLocation, {
+            if let location = locationViewModel.currentLocation {
+                mapCameraPosition = .region(
+                    MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(
+                            latitude: location.coordinate.latitude,
+                            longitude: location.coordinate.longitude
+                        ),
+                        span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    )
+                )
             }
+        })
+        .onTapGesture {
+            withAnimation(.spring()) {
+                navigationPath.append(.fullMap)
+            }
+        }
     }
 }
 

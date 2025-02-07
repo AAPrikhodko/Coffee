@@ -12,19 +12,14 @@ import MapKit
 class LocationViewModel: NSObject, CLLocationManagerDelegate {
     
     private let locationManager = CLLocationManager()
+    private let geocoder = CLGeocoder()
     
-    var currentLocation = CLLocation(latitude: 0, longitude: 0) {
+    var currentLocation: CLLocation? {
         didSet {
-            updateRegion()
+            updateCurrentAddress()
         }
     }
-    
-    var currentLocationRegion = EquatableCoordinateRegion(
-        region: MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
-            span: MKCoordinateSpan(latitudeDelta: 90, longitudeDelta: 180)
-        )
-    )
+    var currentAddress: String?
     
     override init() {
         super.init()
@@ -39,12 +34,21 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
         locationManager.stopUpdatingLocation()
     }
     
-    private func updateRegion() {
-        currentLocationRegion = EquatableCoordinateRegion(
-            region: MKCoordinateRegion(
-                center: currentLocation.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            )
-        )
+    private func updateCurrentAddress() {
+        guard let location = currentLocation else { return }
+        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
+            guard let placemark = placemarks?.first else { return }
+            
+            let address = [
+                placemark.subThoroughfare,
+                placemark.thoroughfare,
+                placemark.locality,
+                placemark.administrativeArea,
+                placemark.country
+            ].compactMap { $0 }.joined(separator: ", ")
+            
+            self?.currentAddress = address.isEmpty ? "Unknown Location" : address
+        }
     }
+    
 }
