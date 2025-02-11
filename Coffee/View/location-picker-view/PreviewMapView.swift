@@ -11,6 +11,7 @@ import MapKit
 struct PreviewMapView: View {
     @Binding var navigationPath: [NewRecordRoute]
     @Binding var locationViewModel: LocationViewModel
+    @Binding var locationPickerViewModel: LocationPickerViewModel
     
     @State private var mapCameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     
@@ -23,6 +24,7 @@ struct PreviewMapView: View {
         }
         .onChange(of: locationViewModel.location) {
             updateMapCameraPosition()
+            updateLocationInPicker()
         }
         .frame(height: 200)
         .onTapGesture {
@@ -44,12 +46,17 @@ struct PreviewMapView: View {
         }
     }
     
+    func updateLocationInPicker() {
+        locationPickerViewModel.selectedLocation = locationViewModel.location
+    }
+    
 }
 
 
 #Preview {
     PreviewMapView(
         navigationPath: .constant([NewRecordRoute]()),
-        locationViewModel: .constant(LocationViewModel())
+        locationViewModel: .constant(LocationViewModel()),
+        locationPickerViewModel: .constant(LocationPickerViewModel())
     )
 }

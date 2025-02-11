@@ -11,6 +11,7 @@ import MapKit
 struct FullMapView2: View {
     @Binding var navigationPath: [NewRecordRoute]
     @Binding var locationViewModel: LocationViewModel
+    @Binding var locationPickerViewModel: LocationPickerViewModel
     
     @State private var mapCameraPosition: MapCameraPosition = .automatic
     @State private var annotationScale: CGFloat = 0.5
@@ -18,31 +19,38 @@ struct FullMapView2: View {
     var body: some View {
         ZStack {
             Map(position: $mapCameraPosition)
-            .onAppear {
-                    mapCameraPosition = .region(
-                        MKCoordinateRegion(
-                            center: locationViewModel.location.coordinate,
-                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                        )
+                .onAppear() {
+                    let region: MKCoordinateRegion =
+                    MKCoordinateRegion(
+                        center: locationViewModel.location.coordinate,
+                        span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
                     )
-            }
-            .onMapCameraChange(frequency: .onEnd) { context in
-                locationViewModel.location = CLLocation(
-                    latitude: context.camera.centerCoordinate.latitude,
-                    longitude: context.camera.centerCoordinate.longitude
-                )
-            }
+                    withAnimation {
+                        mapCameraPosition = .region(region)
+                    }
+                    
+                    locationPickerViewModel.selectedLocation = CLLocation(
+                        latitude: locationViewModel.location.coordinate.latitude,
+                        longitude: locationViewModel.location.coordinate.longitude
+                    )
+                }
+                .onMapCameraChange(frequency: .onEnd) { context in
+                    locationPickerViewModel.selectedLocation = CLLocation(
+                        latitude: context.camera.centerCoordinate.latitude,
+                        longitude: context.camera.centerCoordinate.longitude
+                    )
+                }
             
             VStack(spacing: 8) {
                 
-                    Text(locationViewModel.address)
-                        .font(.caption)
-                        .padding(6)
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(8)
-                        .shadow(radius: 2)
-                    // Optionally add a fade transition
-                        .transition(.opacity)
+                Text(locationPickerViewModel.selectedLocationAddress)
+                    .font(.caption)
+                    .padding(6)
+                    .background(Color.white.opacity(0.8))
+                    .cornerRadius(8)
+                    .shadow(radius: 2)
+                // Optionally add a fade transition
+                    .transition(.opacity)
                 
                 
                 Image(systemName: "mappin")
@@ -64,6 +72,7 @@ struct FullMapView2: View {
         .toolbar {
             ToolbarItem (placement: .topBarTrailing) {
                 Button {
+                    updateLocationInViewModel()
                     navigationPath.removeLast()
                 } label: {
                     Text("Select")
@@ -71,12 +80,28 @@ struct FullMapView2: View {
             }
         }
     }
+    
+    func updateMapCameraPosition() {
+        let region: MKCoordinateRegion =
+        MKCoordinateRegion(
+            center: locationPickerViewModel.selectedLocation.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
+        )
+        withAnimation {
+            mapCameraPosition = .region(region)
+        }
+    }
+    
+    func updateLocationInViewModel() {
+        locationViewModel.location = locationPickerViewModel.selectedLocation
+    }
 }
 
 
 #Preview {
     FullMapView2(
         navigationPath: .constant([NewRecordRoute]()),
-        locationViewModel: .constant(LocationViewModel())
+        locationViewModel: .constant(LocationViewModel()),
+        locationPickerViewModel: .constant(LocationPickerViewModel())
     )
 }

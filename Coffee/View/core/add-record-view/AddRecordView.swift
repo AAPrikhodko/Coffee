@@ -13,7 +13,9 @@ struct AddRecordView: View {
     
     @StateObject var recordViewModel = NewRecordViewModel()
     @State private var navigationPath = [NewRecordRoute]()
+    
     @State private var locationViewModel = LocationViewModel()
+    @State private var locationPickerViewModel = LocationPickerViewModel()
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -53,7 +55,8 @@ struct AddRecordView: View {
                 Section("What place?") {
                     PreviewMapView(
                         navigationPath: $navigationPath,
-                        locationViewModel: $locationViewModel
+                        locationViewModel: $locationViewModel,
+                        locationPickerViewModel: $locationPickerViewModel
                     )
                         .listRowInsets(EdgeInsets())
                     
@@ -79,7 +82,8 @@ struct AddRecordView: View {
                 case .mapPicker:
                     FullMapView2(
                         navigationPath: $navigationPath,
-                        locationViewModel: $locationViewModel
+                        locationViewModel: $locationViewModel,
+                        locationPickerViewModel: $locationPickerViewModel
                     )
                 case .searchLocation:
                     SearchLocationsView(navigationPath: $navigationPath)
