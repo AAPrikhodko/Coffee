@@ -15,7 +15,7 @@ struct FullMapView2: View {
     
     @State private var mapCameraPosition: MapCameraPosition = .automatic
     @State private var annotationScale: CGFloat = 0.5
-    
+     
     var body: some View {
         ZStack {
             Map(position: $mapCameraPosition)
@@ -68,6 +68,39 @@ struct FullMapView2: View {
                         }
                     }
             }
+            
+            VStack {
+                Spacer()
+                
+                HStack {
+                    Button {
+                        print("Search")
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.blue)
+                            .font(.body)
+                            .frame(width: 48, height: 48)
+                            .background(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    
+                    Spacer()
+                    
+                    Button {
+                        locationPickerViewModel.setUserLocation()
+                        updateMapCameraPosition()
+                    } label: {
+                        Image(systemName: "paperplane")
+                            .foregroundStyle(.blue)
+                            .font(.body)
+                            .frame(width: 48, height: 48)
+                            .background(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                .padding()
+            }
+
         }
         .toolbar {
             ToolbarItem (placement: .topBarTrailing) {

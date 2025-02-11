@@ -39,10 +39,12 @@ class LocationPickerViewModel: NSObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        print(" didUpdateLocations: \(locations)")
         guard let currentLocation = locations.last else { return }
         selectedLocation = currentLocation
     }
     
+
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedAlways, .authorizedWhenInUse:
@@ -76,6 +78,12 @@ class LocationPickerViewModel: NSObject, CLLocationManagerDelegate {
             ].compactMap { $0 }.joined(separator: ", ")
             
             self?.selectedLocationAddress = currentAddress.isEmpty ? "No data" : currentAddress
+        }
+    }
+    
+    func setUserLocation() {
+        if let location = manager.location {
+            self.selectedLocation = location
         }
     }
 }
