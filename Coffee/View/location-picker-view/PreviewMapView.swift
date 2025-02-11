@@ -9,7 +9,7 @@ import SwiftUI
 import MapKit
 
 struct PreviewMapView: View {
-    @Binding var navigationPath: [LocationPickerRoute]
+    @Binding var navigationPath: [NewRecordRoute]
     @Binding var locationViewModel: LocationViewModel
     
     @State private var mapCameraPosition: MapCameraPosition = .automatic
@@ -34,19 +34,22 @@ struct PreviewMapView: View {
                     )
                 )
             }
+            
         })
+        .frame(height: 200)
         .onTapGesture {
             withAnimation(.spring()) {
-                navigationPath.append(.fullMap)
+                navigationPath.append(.mapPicker)
             }
         }
     }
+    
 }
 
 
 #Preview {
     PreviewMapView(
-        navigationPath: .constant([LocationPickerRoute]()),
+        navigationPath: .constant([NewRecordRoute]()),
         locationViewModel: .constant(LocationViewModel())
     )
 }

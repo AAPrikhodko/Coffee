@@ -50,5 +50,4 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
             self?.currentAddress = address.isEmpty ? "Unknown Location" : address
         }
     }
-    
 }

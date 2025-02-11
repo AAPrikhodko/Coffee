@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SearchLocationsView: View {
-    @Binding var navigationPath: [LocationPickerRoute]
+    @Binding var navigationPath: [NewRecordRoute]
     
     var body: some View {
         Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
@@ -16,5 +16,5 @@ struct SearchLocationsView: View {
 }
 
 #Preview {
-    SearchLocationsView(navigationPath: .constant([.searchLocations]))
+    SearchLocationsView(navigationPath: .constant([.searchLocation]))
 }

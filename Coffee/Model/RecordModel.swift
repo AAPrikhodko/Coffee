@@ -144,3 +144,10 @@ enum NewRecordState {
     case fullMap
     case searchLocations
 }
+
+enum NewRecordRoute {
+//    case collectData
+    case mapPicker
+    case searchLocation
+}
+
