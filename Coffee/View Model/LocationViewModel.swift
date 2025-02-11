@@ -11,35 +11,63 @@ import MapKit
 @Observable
 class LocationViewModel: NSObject, CLLocationManagerDelegate {
     
-    private let locationManager = CLLocationManager()
-    private let geocoder = CLGeocoder()
+    @ObservationIgnored let manager = CLLocationManager()
+    @ObservationIgnored let geocoder = CLGeocoder()
     
-    var currentLocation: CLLocation? {
+    var isAuthorized: Bool = false
+    var location: CLLocation = CLLocation(latitude: 0, longitude: 0) {
         didSet {
-            updateCurrentAddress()
+            updateAddress()
         }
     }
-    var currentAddress: String?
+    var address: String = "No data"
     
     override init() {
         super.init()
-        locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
-        locationManager.startUpdatingLocation()
+        manager.delegate = self
+        startLocationServices()
+    }
+    
+    func startLocationServices() {
+        if manager.authorizationStatus == .authorizedAlways || manager.authorizationStatus == .authorizedWhenInUse {
+            manager.startUpdatingLocation()
+            isAuthorized = true
+        } else {
+            isAuthorized = false
+            manager.requestWhenInUseAuthorization()
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        self.currentLocation = location
-        locationManager.stopUpdatingLocation()
+        guard let currentLocation = locations.last else { return }
+        location = currentLocation
     }
     
-    private func updateCurrentAddress() {
-        guard let location = currentLocation else { return }
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            isAuthorized = true
+            manager.requestLocation()
+        case .notDetermined:
+            isAuthorized = false
+            manager.requestWhenInUseAuthorization()
+        case .denied:
+            isAuthorized = false
+        default:
+            isAuthorized = true
+            startLocationServices()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: any Error) {
+        print(error.localizedDescription)
+    }
+    
+    private func updateAddress() {
         geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
             guard let placemark = placemarks?.first else { return }
             
-            let address = [
+            let currentAddress = [
                 placemark.subThoroughfare,
                 placemark.thoroughfare,
                 placemark.locality,
@@ -47,7 +75,7 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
                 placemark.country
             ].compactMap { $0 }.joined(separator: ", ")
             
-            self?.currentAddress = address.isEmpty ? "Unknown Location" : address
+            self?.address = currentAddress.isEmpty ? "No data" : currentAddress
         }
     }
 }

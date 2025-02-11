@@ -19,26 +19,23 @@ struct FullMapView2: View {
         ZStack {
             Map(position: $mapCameraPosition)
             .onAppear {
-                if let location = locationViewModel.currentLocation {
-                  
                     mapCameraPosition = .region(
                         MKCoordinateRegion(
-                            center: location.coordinate,
+                            center: locationViewModel.location.coordinate,
                             span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
                         )
                     )
-                }
             }
             .onMapCameraChange(frequency: .onEnd) { context in
-                locationViewModel.currentLocation = CLLocation(
+                locationViewModel.location = CLLocation(
                     latitude: context.camera.centerCoordinate.latitude,
                     longitude: context.camera.centerCoordinate.longitude
                 )
             }
             
             VStack(spacing: 8) {
-                if let address = locationViewModel.currentAddress {
-                    Text(address)
+                
+                    Text(locationViewModel.address)
                         .font(.caption)
                         .padding(6)
                         .background(Color.white.opacity(0.8))
@@ -46,7 +43,7 @@ struct FullMapView2: View {
                         .shadow(radius: 2)
                     // Optionally add a fade transition
                         .transition(.opacity)
-                }
+                
                 
                 Image(systemName: "mappin")
                     .resizable()

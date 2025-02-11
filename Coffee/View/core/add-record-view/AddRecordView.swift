@@ -57,7 +57,12 @@ struct AddRecordView: View {
                     )
                         .listRowInsets(EdgeInsets())
                     
-                    Text(locationViewModel.currentAddress ?? "")
+                    HStack {
+                        Text("Address")
+                        Spacer()
+                        Text(locationViewModel.address)
+                            .foregroundStyle(.gray)
+                    }
                     
                     Picker("Type", selection: $recordViewModel.record.place.type) {
                         ForEach(PlaceType.allCases, id: \.self) { type in
