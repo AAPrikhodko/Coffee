@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LocationSearchView: View {
-    @EnvironmentObject var viewModel: LocationSearchViewModel
+//    @EnvironmentObject var viewModel: LocationSearchViewModelx
     
     var body: some View {
 
@@ -18,8 +18,8 @@ struct LocationSearchView: View {
                 Image(systemName: "magnifyingglass")
                     .padding(.horizontal)
                 
-                TextField("Search location...", text: $viewModel.queryFragment)
-                    .foregroundColor(Color(.darkGray))
+//                TextField("Search location...", text: $viewModel.queryFragment)
+//                    .foregroundColor(Color(.darkGray))
             }
             .frame(width: UIScreen.main.bounds.width - 64, height: 50)
             .background(
@@ -33,19 +33,19 @@ struct LocationSearchView: View {
             Divider()
                 .padding(.vertical)
             
-            // listView
-            ScrollView {
-                VStack(alignment: .leading) {
-                    ForEach(viewModel.results, id: \.self) { result in
-                        LocationSearchResultCell(title: result.title, subtitle: result.subtitle)
-                            .onTapGesture {
-                                withAnimation(.spring()) {
-                                    viewModel.selectLocation(result)
-                                }
-                            }
-                    }
-                }
-            }
+//            // listView
+//            ScrollView {
+//                VStack(alignment: .leading) {
+//                    ForEach(viewModel.results, id: \.self) { result in
+//                        LocationSearchResultCell(title: result.title, subtitle: result.subtitle)
+//                            .onTapGesture {
+//                                withAnimation(.spring()) {
+//                                    viewModel.selectLocation(result)
+//                                }
+//                            }
+//                    }
+//                }
+//            }
         
         }
         .background(.white)

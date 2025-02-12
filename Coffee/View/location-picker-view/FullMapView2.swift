@@ -13,28 +13,12 @@ struct FullMapView2: View {
     @Binding var locationViewModel: LocationViewModel
     @Binding var locationPickerViewModel: LocationPickerViewModel
     
-    @State private var mapCameraPosition: MapCameraPosition = .automatic
     @State private var annotationScale: CGFloat = 0.5
      
     var body: some View {
         ZStack {
-            Map(position: $mapCameraPosition)
-                .onAppear() {
-                    let region: MKCoordinateRegion =
-                    MKCoordinateRegion(
-                        center: locationViewModel.location.coordinate,
-                        span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
-                    )
-                    withAnimation {
-                        mapCameraPosition = .region(region)
-                    }
-                    
-                    locationPickerViewModel.selectedLocation = CLLocation(
-                        latitude: locationViewModel.location.coordinate.latitude,
-                        longitude: locationViewModel.location.coordinate.longitude
-                    )
-                }
-                .onMapCameraChange(frequency: .onEnd) { context in
+            Map(position: $locationPickerViewModel.mapCameraPosition)
+                .onMapCameraChange(frequency: .onEnd ) { context in
                     locationPickerViewModel.selectedLocation = CLLocation(
                         latitude: context.camera.centerCoordinate.latitude,
                         longitude: context.camera.centerCoordinate.longitude
@@ -88,7 +72,6 @@ struct FullMapView2: View {
                     
                     Button {
                         locationPickerViewModel.setUserLocation()
-                        updateMapCameraPosition()
                     } label: {
                         Image(systemName: "paperplane")
                             .foregroundStyle(.blue)
@@ -100,7 +83,6 @@ struct FullMapView2: View {
                 }
                 .padding()
             }
-
         }
         .toolbar {
             ToolbarItem (placement: .topBarTrailing) {
@@ -111,17 +93,6 @@ struct FullMapView2: View {
                     Text("Select")
                 }
             }
-        }
-    }
-    
-    func updateMapCameraPosition() {
-        let region: MKCoordinateRegion =
-        MKCoordinateRegion(
-            center: locationPickerViewModel.selectedLocation.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
-        )
-        withAnimation {
-            mapCameraPosition = .region(region)
         }
     }
     

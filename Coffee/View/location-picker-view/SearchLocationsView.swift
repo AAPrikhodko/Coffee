@@ -13,8 +13,6 @@ struct SearchLocationsView: View {
     @Binding var locationPickerViewModel: LocationPickerViewModel
     
     @State var locationSearchViewModel = LocationSearchViewModel()
-
-
     
     var body: some View {
         VStack {
@@ -35,22 +33,15 @@ struct SearchLocationsView: View {
             Divider()
                 .padding(.vertical)
             
-            // listView
             ScrollView {
                 VStack(alignment: .leading) {
                     ForEach(locationSearchViewModel.results, id: \.self) { result in
                         LocationSearchResultCell(title: result.title, subtitle: result.subtitle)
                             .onTapGesture {
                                 withAnimation(.spring()) {
-                                    locationSearchViewModel.selectLocation(result)
+                                    locationSearchViewModel.selectLocation(result, locationPickerViewModel: locationPickerViewModel)
                                     navigationPath.removeLast()
-                                    if let coordinate = locationSearchViewModel.selectedlocationCoordinate {
-                                        locationPickerViewModel.selectedLocation = CLLocation(
-                                            latitude: coordinate.latitude,
-                                            longitude: coordinate.longitude
-                                        )
-                                    }
-                                    locationPickerViewModel.updateAddress()
+                                    
                                 }
                             }
                     }

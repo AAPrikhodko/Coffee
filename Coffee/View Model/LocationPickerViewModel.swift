@@ -7,6 +7,8 @@
 
 import Foundation
 import CoreLocation
+import SwiftUI
+import MapKit
 
 @Observable
 class LocationPickerViewModel: NSObject, CLLocationManagerDelegate {
@@ -18,9 +20,11 @@ class LocationPickerViewModel: NSObject, CLLocationManagerDelegate {
     var selectedLocation: CLLocation = CLLocation(latitude: 0, longitude: 0) {
         didSet {
             updateAddress()
+            updateMapCameraPosition()
         }
     }
     var selectedLocationAddress: String = "No data"
+    var mapCameraPosition: MapCameraPosition = .automatic
     
     override init() {
         super.init()
@@ -78,6 +82,17 @@ class LocationPickerViewModel: NSObject, CLLocationManagerDelegate {
             ].compactMap { $0 }.joined(separator: ", ")
             
             self?.selectedLocationAddress = currentAddress.isEmpty ? "No data" : currentAddress
+        }
+    }
+    
+    func updateMapCameraPosition() {
+        let region: MKCoordinateRegion =
+        MKCoordinateRegion(
+            center: selectedLocation.coordinate,
+            span: MKCoordinateSpan(latitudeDelta: 0.008, longitudeDelta: 0.008)
+        )
+        withAnimation {
+            mapCameraPosition = .region(region)
         }
     }
     
