@@ -6,15 +6,65 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct SearchLocationsView: View {
     @Binding var navigationPath: [NewRecordRoute]
+    @Binding var locationPickerViewModel: LocationPickerViewModel
+    
+    @State var locationSearchViewModel = LocationSearchViewModel()
+
+
     
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.gray)
+                
+                TextField("Search location", text: $locationSearchViewModel.queryFragment)
+            }
+            .padding(.vertical, 12)
+            .padding(.horizontal)
+            .background {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(.gray)
+            }
+            .padding(.vertical, 10)
+            
+            Divider()
+                .padding(.vertical)
+            
+            // listView
+            ScrollView {
+                VStack(alignment: .leading) {
+                    ForEach(locationSearchViewModel.results, id: \.self) { result in
+                        LocationSearchResultCell(title: result.title, subtitle: result.subtitle)
+                            .onTapGesture {
+                                withAnimation(.spring()) {
+                                    locationSearchViewModel.selectLocation(result)
+                                    navigationPath.removeLast()
+                                    if let coordinate = locationSearchViewModel.selectedlocationCoordinate {
+                                        locationPickerViewModel.selectedLocation = CLLocation(
+                                            latitude: coordinate.latitude,
+                                            longitude: coordinate.longitude
+                                        )
+                                    }
+                                    locationPickerViewModel.updateAddress()
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        .padding()
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 }
 
 #Preview {
-    SearchLocationsView(navigationPath: .constant([.searchLocation]))
+    SearchLocationsView(
+        navigationPath: .constant([.searchLocation]),
+        locationPickerViewModel: .constant(LocationPickerViewModel())
+    )
 }

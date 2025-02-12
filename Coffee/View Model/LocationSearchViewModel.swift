@@ -9,15 +9,13 @@ import Foundation
 import MapKit
 import SwiftUICore
 
+@Observable
 class LocationSearchViewModel: NSObject, ObservableObject {
     
     // MARK: - Properties
     
-    @Published var results: [MKLocalSearchCompletion] = []
-    @Published var selectedlocationCoordinate: CLLocationCoordinate2D?
-    @Published var selectedLoationAddress: String?
-    
-    @EnvironmentObject var recordViewModel: NewRecordViewModel
+    var results: [MKLocalSearchCompletion] = []
+    var selectedlocationCoordinate: CLLocationCoordinate2D?
     
     private let searchCompleter = MKLocalSearchCompleter()
     var queryFragment : String = "" {
@@ -45,17 +43,8 @@ class LocationSearchViewModel: NSObject, ObservableObject {
             }
             guard let item = response?.mapItems.first else { return }
             let coordinate = item.placemark.coordinate
-
-            let street = item.placemark.thoroughfare ?? ""
-            let city = item.placemark.locality ?? ""
-            let country = item.placemark.country ?? ""
-            let houseNumber = item.placemark.subThoroughfare ?? ""
-            
-            self.selectedLoationAddress = "\(houseNumber) \(street), \(city), \(country)"
+           
             self.selectedlocationCoordinate = coordinate
-            
-            
-
         }
     }
     

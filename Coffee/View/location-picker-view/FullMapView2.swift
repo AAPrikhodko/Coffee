@@ -74,7 +74,7 @@ struct FullMapView2: View {
                 
                 HStack {
                     Button {
-                        print("Search")
+                        navigationPath.append(.searchLocation)
                     } label: {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.blue)

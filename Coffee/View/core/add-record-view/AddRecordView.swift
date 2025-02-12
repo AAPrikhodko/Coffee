@@ -86,7 +86,10 @@ struct AddRecordView: View {
                         locationPickerViewModel: $locationPickerViewModel
                     )
                 case .searchLocation:
-                    SearchLocationsView(navigationPath: $navigationPath)
+                    SearchLocationsView(
+                        navigationPath: $navigationPath,
+                        locationPickerViewModel: $locationPickerViewModel
+                    )
                 }
             }
             .toolbar {
