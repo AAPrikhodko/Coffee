@@ -30,12 +30,12 @@ struct Record: Identifiable, Hashable {
         Record(id: UUID(), type: .cappuccino, size: ._200, price: 7.99, date: Date(timeIntervalSinceNow: -14_400_000), place: Place.examples[1]),
         Record(id: UUID(), type: .flatWhite, size: ._300, price: 2.33, date: Date(timeIntervalSinceNow: -21_600_000), place: Place.examples[2]),
         Record(id: UUID(), type: .macchiato, size: ._400, price: 10.40, date: Date(timeIntervalSinceNow: -28_800_000), place: Place.examples[3]),
-        Record(id: UUID(), type: .mocha, size: ._150, price: 5.15, date: Date(timeIntervalSinceNow: -36_000_000), place: Place.examples[4]),
-        Record(id: UUID(), type: .icedCoffee, size: ._100, price: 3.12, date: Date(timeIntervalSinceNow: -43_200_000), place: Place.examples[5]),
+        Record(id: UUID(), type: .americano, size: ._150, price: 5.15, date: Date(timeIntervalSinceNow: -36_000_000), place: Place.examples[4]),
+        Record(id: UUID(), type: .cappuccino, size: ._100, price: 3.12, date: Date(timeIntervalSinceNow: -43_200_000), place: Place.examples[5]),
         Record(id: UUID(), type: .americano, size: ._200, price: 4.23, date: Date(timeIntervalSinceNow: -50_400_000), place: Place.examples[6]),
         Record(id: UUID(), type: .espresso, size: ._450, price: 12.99, date: Date(timeIntervalSinceNow: -57_600_000), place: Place.examples[7]),
-        Record(id: UUID(), type: .mocha, size: ._250, price: 3.55, date: Date(timeIntervalSinceNow: -64_800_000), place: Place.examples[8]),
-        Record(id: UUID(), type: .icedCoffee, size: ._150, price: 6.00, date: Date(timeIntervalSinceNow: -72_000_000), place: Place.examples[9])
+        Record(id: UUID(), type: .cappuccino, size: ._250, price: 3.55, date: Date(timeIntervalSinceNow: -64_800_000), place: Place.examples[8]),
+        Record(id: UUID(), type: .latte, size: ._150, price: 6.00, date: Date(timeIntervalSinceNow: -72_000_000), place: Place.examples[9])
     ]
     
     static func threeMonthsExamples() -> [Record]  {
@@ -89,8 +89,6 @@ enum CoffeeType: Int, Identifiable, CaseIterable, Hashable {
     case cappuccino
     case macchiato
     case flatWhite
-    case mocha
-    case icedCoffee
     case espresso
     
     var title: String {
@@ -105,10 +103,6 @@ enum CoffeeType: Int, Identifiable, CaseIterable, Hashable {
             return "Macchiato"
         case .flatWhite:
             return "Flat White"
-        case .mocha:
-            return "Mocha"
-        case .icedCoffee:
-            return "Iced Coffee"
         case .espresso:
             return "Espresso"
         }
@@ -126,10 +120,6 @@ enum CoffeeType: Int, Identifiable, CaseIterable, Hashable {
             return "Macchiato"
         case .flatWhite:
             return "Flat White"
-        case .mocha:
-            return "Mocha"
-        case .icedCoffee:
-            return "Iced Coffee"
         case .espresso:
             return "Espresso"
         }

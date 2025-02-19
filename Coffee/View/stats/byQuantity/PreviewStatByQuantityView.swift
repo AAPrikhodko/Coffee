@@ -18,7 +18,7 @@ struct PreviewStatByQuantityView: View {
                     Image(systemName: isPositiveChange ? "arrow.up.right" : "arrow.down.right").bold()
                         .foregroundColor( isPositiveChange ? .green : .red)
                     
-                    Text("Coffee consumption ") +
+                    Text("Your coffee consumption ") +
                     Text(changedRecordsQuantity)
                         .bold() +
                     Text(" in the last 90 days.")

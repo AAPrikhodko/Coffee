@@ -94,6 +94,16 @@ class RecordsViewModel {
         return records.reduce(0) { $0 + $1.price }
     }
     
+    var totalRecordsPerCoffeeType: [(coffeeType: CoffeeType, records: Int)] {
+        let recordsByCoffeeType = recordsGroupedByCoffeeType(records: records)
+        let totalRecordsPerCoffeeType = totalRecordsPerCoffeeType(recordsByCoffeType: recordsByCoffeeType)
+        return totalRecordsPerCoffeeType.sorted { $0.records > $1.records }
+    }
+    
+    var favouriteCoffeeType: (coffeeType: CoffeeType, records: Int)? {
+        totalRecordsPerCoffeeType.max { $0.records < $1.records }
+    }
+    
     init() {
         // get records
     }
@@ -153,6 +163,31 @@ class RecordsViewModel {
             totalRecords.append((day: date, records: records.count))
         }
         
+        return totalRecords
+    }
+    
+    func recordsGroupedByCoffeeType(records: [Record]) -> [CoffeeType: [Record]] {
+        var recordsByCoffeeType: [CoffeeType: [Record]] = [:]
+
+        for record in records {
+            let cofeeType = record.type
+            if recordsByCoffeeType[cofeeType] != nil {
+                recordsByCoffeeType[cofeeType]!.append(record)
+            } else {
+                recordsByCoffeeType[cofeeType] = [record]
+            }
+        }
+
+        return recordsByCoffeeType
+    }
+    
+    func totalRecordsPerCoffeeType(recordsByCoffeType: [CoffeeType: [Record]]) -> [(coffeeType: CoffeeType, records: Int)] {
+        var totalRecords: [(coffeeType: CoffeeType, records: Int)] = []
+
+        for (coffeeType, records) in recordsByCoffeType {
+            totalRecords.append((coffeeType: coffeeType, records: records.count))
+        }
+
         return totalRecords
     }
     

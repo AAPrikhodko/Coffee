@@ -18,11 +18,20 @@ struct HomeTabView: View {
                 .padding()
             
             List {
+                Section {
+                    NavigationLink {
+                        StatByQuantityView(recordsViewModel: recordsViewModel)
+                    } label: {
+                        PreviewStatByQuantityView(recordsViewModel: recordsViewModel)
+                    }
+                }
                 
-                NavigationLink {
-                    StatByQuantityView(recordsViewModel: recordsViewModel)
-                } label: {
-                    PreviewStatByQuantityView(recordsViewModel: recordsViewModel)
+                Section {
+                    NavigationLink {
+                        StatByCoffeeTypeView(recordsViewModel: recordsViewModel)
+                    } label: {
+                        PreviewStatByCoffeeTypeView(recordsViewModel: recordsViewModel)
+                    }
                 }
             }
             
