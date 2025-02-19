@@ -8,10 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @State private var recordsViewModel = RecordsViewModel()
+    
     var body: some View {
         TabView {
             Tab("Home", systemImage: "house") {
-                HomeTabView()
+                HomeTabView(
+                    recordsViewModel: $recordsViewModel
+                )
             }
             
             Tab("My Map", systemImage: "map") {

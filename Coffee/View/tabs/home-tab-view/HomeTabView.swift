@@ -8,28 +8,39 @@
 import SwiftUI
 
 struct HomeTabView: View {
+    @Binding var recordsViewModel: RecordsViewModel
+    
     @State private var showAddDrinkSheet: Bool = false
     
     var body: some View {
-        UserInfo()
-            .padding()
-        
-        PersonalStat()
-            .padding(.bottom)
-        
-        GlobalStat()
-            .padding(.bottom)
-        
-        AddDrinkButton(showAddDrinkSheet: $showAddDrinkSheet)
-            .fullScreenCover(isPresented: $showAddDrinkSheet) {
-                AddRecordView(isSheetShown: $showAddDrinkSheet)
+        NavigationStack() {
+            UserInfo()
+                .padding()
+            
+            List {
+                
+                NavigationLink {
+                    StatByQuantityView(recordsViewModel: recordsViewModel)
+                } label: {
+                    PreviewStatByQuantityView(recordsViewModel: recordsViewModel)
+                }
             }
             
-        
-        Spacer()
+            
+            AddDrinkButton(showAddDrinkSheet: $showAddDrinkSheet)
+                .padding(.bottom, 30)
+                .fullScreenCover(isPresented: $showAddDrinkSheet) {
+                    AddRecordView(
+                        isSheetShown: $showAddDrinkSheet,
+                        recordsViewModel: $recordsViewModel
+                    )
+                }
+        }
     }
 }
 
 #Preview {
-    HomeTabView()
+    HomeTabView(
+        recordsViewModel: .constant(RecordsViewModel())
+    )
 }

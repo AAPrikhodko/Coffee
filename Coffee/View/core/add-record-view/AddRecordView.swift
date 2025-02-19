@@ -10,6 +10,7 @@ import MapKit
 
 struct AddRecordView: View {
     @Binding var isSheetShown: Bool
+    @Binding var recordsViewModel: RecordsViewModel
     
     @StateObject var recordViewModel = NewRecordViewModel()
     @State private var navigationPath = [NewRecordRoute]()
@@ -95,7 +96,7 @@ struct AddRecordView: View {
             .toolbar {
                 Button {
                     isSheetShown = false
-                    print("Added")
+                    recordsViewModel.addRecord(recordViewModel.record)
                 } label: {
                     Text("Add")
                 }
@@ -107,5 +108,8 @@ struct AddRecordView: View {
 }
 
 #Preview {
-    AddRecordView(isSheetShown: .constant(true))
+    AddRecordView(
+        isSheetShown: .constant(true),
+        recordsViewModel: .constant(RecordsViewModel())
+    )
 }

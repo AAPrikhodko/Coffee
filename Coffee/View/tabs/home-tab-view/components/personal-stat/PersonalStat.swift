@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PersonalStat: View {
-    var recordsViewModel = RecordsViewModel()
+    @Binding var recordsViewModel: RecordsViewModel
     
     var body: some View {
 
@@ -68,5 +68,7 @@ struct PersonalStat: View {
 }
 
 #Preview {
-    PersonalStat()
+    PersonalStat(
+        recordsViewModel: .constant(RecordsViewModel())
+    )
 }
