@@ -67,8 +67,6 @@ class RecordsViewModel {
 //        ),
 //    ]
     
-    
-
     var totalRecords: Int {
         return records.count
     }
@@ -90,7 +88,13 @@ class RecordsViewModel {
         return totalRecordsPerDate(recordsByDate: recordsByMonth)
     }
     
-    var totalSpent: Double {
+    var expensesByMonth: [ExpenseStates] {
+        let recordsByMonth = recordsGroupedByMonth(records: records)
+        let expensesByMonth = totalExpensesPerDate(recordsByDate: recordsByMonth)
+        return expensesByMonth.sorted { $0.day < $1.day }
+    }
+    
+    var totalExpenses: Double {
         return records.reduce(0) { $0 + $1.price }
     }
     
@@ -166,6 +170,19 @@ class RecordsViewModel {
         return totalRecords
     }
     
+    func totalExpensesPerDate(recordsByDate: [Date: [Record]]) -> [ExpenseStates] {
+        var totalExpenses: [ExpenseStates] = []
+        
+        for (date, records) in recordsByDate {
+            let totalExpensesForDate = records.reduce(0) { $0 + $1.price }
+            let newTotalExpensesForDate = ExpenseStates(day: date, expenses: totalExpensesForDate)
+        
+            totalExpenses.append(newTotalExpensesForDate)
+        }
+        
+        return totalExpenses
+    }
+    
     func recordsGroupedByCoffeeType(records: [Record]) -> [CoffeeType: [Record]] {
         var recordsByCoffeeType: [CoffeeType: [Record]] = [:]
 
@@ -201,4 +218,11 @@ class RecordsViewModel {
     func addRecord(_ record: Record) {
         records.append(record)
     }
+}
+
+struct ExpenseStates: Identifiable {
+    var day: Date
+    var expenses: Double
+    
+    var id: Date { day }
 }

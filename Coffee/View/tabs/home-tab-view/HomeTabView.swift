@@ -33,6 +33,14 @@ struct HomeTabView: View {
                         PreviewStatByCoffeeTypeView(recordsViewModel: recordsViewModel)
                     }
                 }
+                
+                Section {
+                    NavigationLink {
+                        StatByCoffeeTypeView(recordsViewModel: recordsViewModel)
+                    } label: {
+                        PreviewStatByExpensesView(recordsViewModel: recordsViewModel)
+                    }
+                }
             }
             
             
