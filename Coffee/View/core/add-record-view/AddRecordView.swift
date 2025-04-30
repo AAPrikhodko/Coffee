@@ -22,16 +22,16 @@ struct AddRecordView: View {
         NavigationStack(path: $navigationPath) {
             Form {
                 Section("What drink?") {
-                    Picker("Type", selection: $recordViewModel.record.type) {
-                        ForEach(CoffeeType.allCases, id: \.self) { type in
-                            Text(type.title).tag(type)
+                    Picker("Type", selection: $recordViewModel.record.drinkType) {
+                        ForEach(DrinkType.allCases, id: \.self) { type in
+                            Text(type.displayName).tag(type)
                         }
                     }
                     .pickerStyle(.navigationLink)
                     
-                    Picker("Size", selection: $recordViewModel.record.size) {
-                        ForEach(CoffeeSize.allCases, id: \.self) { size in
-                            Text(size.title + "ml").tag(size)
+                    Picker("Size", selection: $recordViewModel.record.drinkSize) {
+                        ForEach(DrinkSize.allCases, id: \.self) { size in
+                            Text(size.displayName).tag(size)
                         }
                     }
                     .pickerStyle(.navigationLink)
@@ -70,7 +70,7 @@ struct AddRecordView: View {
                     
                     Picker("Type", selection: $recordViewModel.record.place.type) {
                         ForEach(PlaceType.allCases, id: \.self) { type in
-                            Text(type.title).tag(type)
+                            Text(type.displayName).tag(type)
                         }
                     }
                     .pickerStyle(.navigationLink)

@@ -11,7 +11,9 @@ import MapKit
 
 @Observable
 class RecordsViewModel {
-    var records = Record.threeMonthsExamples()
+      var records: [Record] = []
+//    var records = Record.threeMonthsExamples()
+//    var records = Record.examples
 //    [
 //        Record(
 //            id: UUID(),
@@ -98,14 +100,14 @@ class RecordsViewModel {
         return records.reduce(0) { $0 + $1.price }
     }
     
-    var totalRecordsPerCoffeeType: [(coffeeType: CoffeeType, records: Int)] {
-        let recordsByCoffeeType = recordsGroupedByCoffeeType(records: records)
-        let totalRecordsPerCoffeeType = totalRecordsPerCoffeeType(recordsByCoffeType: recordsByCoffeeType)
-        return totalRecordsPerCoffeeType.sorted { $0.records > $1.records }
+    var totalRecordsPerDrinkType: [(drinkType: DrinkType, records: Int)] {
+        let recordsByDrinkType = recordsGroupedByDrinkType(records: records)
+        let totalRecordsPerDrinkType = totalRecordsPerDrinkType(recordsByCoffeType: recordsByDrinkType)
+        return totalRecordsPerDrinkType.sorted { $0.records > $1.records }
     }
     
-    var favouriteCoffeeType: (coffeeType: CoffeeType, records: Int)? {
-        totalRecordsPerCoffeeType.max { $0.records < $1.records }
+    var favouriteDrinkType: (drinkType: DrinkType, records: Int)? {
+        totalRecordsPerDrinkType.max { $0.records < $1.records }
     }
     
     init() {
@@ -183,26 +185,26 @@ class RecordsViewModel {
         return totalExpenses
     }
     
-    func recordsGroupedByCoffeeType(records: [Record]) -> [CoffeeType: [Record]] {
-        var recordsByCoffeeType: [CoffeeType: [Record]] = [:]
+    func recordsGroupedByDrinkType(records: [Record]) -> [DrinkType: [Record]] {
+        var recordsByDrinkType: [DrinkType: [Record]] = [:]
 
         for record in records {
-            let cofeeType = record.type
-            if recordsByCoffeeType[cofeeType] != nil {
-                recordsByCoffeeType[cofeeType]!.append(record)
+            let drinkType = record.drinkType
+            if recordsByDrinkType[drinkType] != nil {
+                recordsByDrinkType[drinkType]!.append(record)
             } else {
-                recordsByCoffeeType[cofeeType] = [record]
+                recordsByDrinkType[drinkType] = [record]
             }
         }
 
-        return recordsByCoffeeType
+        return recordsByDrinkType
     }
     
-    func totalRecordsPerCoffeeType(recordsByCoffeType: [CoffeeType: [Record]]) -> [(coffeeType: CoffeeType, records: Int)] {
-        var totalRecords: [(coffeeType: CoffeeType, records: Int)] = []
+    func totalRecordsPerDrinkType(recordsByCoffeType: [DrinkType: [Record]]) -> [(drinkType: DrinkType, records: Int)] {
+        var totalRecords: [(drinkType: DrinkType, records: Int)] = []
 
-        for (coffeeType, records) in recordsByCoffeType {
-            totalRecords.append((coffeeType: coffeeType, records: records.count))
+        for (drinkType, records) in recordsByCoffeType {
+            totalRecords.append((drinkType: drinkType, records: records.count))
         }
 
         return totalRecords

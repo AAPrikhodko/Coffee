@@ -28,15 +28,15 @@ struct HomeTabView: View {
                 
                 Section {
                     NavigationLink {
-                        StatByCoffeeTypeView(recordsViewModel: recordsViewModel)
+                        StatByDrinkTypeView(recordsViewModel: recordsViewModel)
                     } label: {
-                        PreviewStatByCoffeeTypeView(recordsViewModel: recordsViewModel)
+                        PreviewStatByDrinkTypeView(recordsViewModel: recordsViewModel)
                     }
                 }
                 
                 Section {
                     NavigationLink {
-                        StatByCoffeeTypeView(recordsViewModel: recordsViewModel)
+                        StatByExpensesView(recordsViewModel: recordsViewModel)
                     } label: {
                         PreviewStatByExpensesView(recordsViewModel: recordsViewModel)
                     }

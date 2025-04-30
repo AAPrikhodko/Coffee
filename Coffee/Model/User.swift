@@ -10,10 +10,18 @@ import Foundation
 struct User: Identifiable {
     let id: UUID
     
-    var name: String
-    var email: String
-    var avatar: String
+    var firstName: String
+    var lastName: String
+    var avatarURL: String?
     var records: [Record]
+    var country: String
+    var registrationDate: Date
+    var favoriteDrink: DrinkType?
+    var achievements: [AchievementType]
+    
+    var fullName: String {
+        "\(firstName) \(lastName)"
+    }
     
     var coffeeRecordsCount: Int {
         return records.count

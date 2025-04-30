@@ -1,5 +1,5 @@
 //
-//  StatByCoffeeTypePieChartView.swift
+//  StatByDrinkTypePieChartView.swift
 //  Coffee
 //
 //  Created by Andrei on 19.02.2025.
@@ -8,19 +8,19 @@
 import SwiftUI
 import Charts
 
-struct StatByCoffeeTypePieChartView: View {
+struct StatByDrinkTypePieChartView: View {
     var recordsViewModel: RecordsViewModel
     
     var body: some View {
      
-            Chart(recordsViewModel.totalRecordsPerCoffeeType, id: \.coffeeType) { data in
+            Chart(recordsViewModel.totalRecordsPerDrinkType, id: \.drinkType) { data in
                 SectorMark(
                     angle: .value("Records", data.records),
                     innerRadius: .ratio(0.618),
                     angularInset: 1.5
                 )
-                .opacity(data.coffeeType == recordsViewModel.favouriteCoffeeType?.coffeeType ? 1 : 0.3)
-                .foregroundStyle(by: .value("Coffee Type", data.coffeeType.title))
+                .opacity(data.drinkType == recordsViewModel.favouriteDrinkType?.drinkType ? 1 : 0.3)
+                .foregroundStyle(by: .value("Coffee Type", data.drinkType.displayName))
             }
             .aspectRatio(1, contentMode: .fit)
             .chartLegend(position: .bottom, spacing: 20)
@@ -29,15 +29,15 @@ struct StatByCoffeeTypePieChartView: View {
                     let frame = geometry[chartProxy.plotFrame!]
                     let visiibleSize = min(frame.width, frame.height)
                     
-                    if let favouriteCoffeeType = recordsViewModel.favouriteCoffeeType {
+                    if let favouriteDrinkType = recordsViewModel.favouriteDrinkType {
                         VStack {
                             Text("Favourite coffee")
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
-                            Text(favouriteCoffeeType.coffeeType.title)
+                            Text(favouriteDrinkType.drinkType.displayName)
                                 .font(.title.bold())
                                 .foregroundStyle(.primary)
-                            Text(favouriteCoffeeType.records.formatted() + " cups")
+                            Text(favouriteDrinkType.records.formatted() + " cups")
                                 
                         }
                         .frame(
@@ -54,6 +54,6 @@ struct StatByCoffeeTypePieChartView: View {
 }
 
 #Preview {
-    StatByCoffeeTypePieChartView(recordsViewModel: .preview)
+    StatByDrinkTypePieChartView(recordsViewModel: .preview)
         .padding()
 }

@@ -70,7 +70,7 @@ struct WeeklyRecordsChartView: View {
         if let rawSelectedDate,
             let selectedDateValue {
             VStack {
-               // Text(rawSelectedDate.formatted(.dateTime.month().day()))
+                Text(rawSelectedDate.formatted(.dateTime.month().day()))
                 
                 Text(selectedDateValue.day.formatted(.dateTime.month().day()))
                 Text("\(selectedDateValue.records) cups")

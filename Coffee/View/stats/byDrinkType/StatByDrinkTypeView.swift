@@ -1,5 +1,5 @@
 //
-//  StatByCoffeeTypeView.swift
+//  StatByDrinkTypeView.swift
 //  Coffee
 //
 //  Created by Andrei on 19.02.2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct StatByCoffeeTypeView: View {
+struct StatByDrinkTypeView: View {
     
     enum ChartStyle: CaseIterable, Identifiable {
         case pie
@@ -39,9 +39,9 @@ struct StatByCoffeeTypeView: View {
             
             switch selectedChartStyle {
             case .pie:
-                StatByCoffeeTypePieChartView(recordsViewModel: recordsViewModel)
+                StatByDrinkTypePieChartView(recordsViewModel: recordsViewModel)
             case .bar:
-                StatByCoffeeTypeBarChartView(recordsViewModel: recordsViewModel)
+                StatByDrinkTypeBarChartView(recordsViewModel: recordsViewModel)
             }
         }
         .padding()
@@ -51,6 +51,6 @@ struct StatByCoffeeTypeView: View {
 }
 
 #Preview {
-    StatByCoffeeTypeView(recordsViewModel: .preview)
+    StatByDrinkTypeView(recordsViewModel: .preview)
         .padding()
 }

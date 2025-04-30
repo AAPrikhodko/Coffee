@@ -14,8 +14,9 @@ class NewRecordViewModel: ObservableObject {
     
     @Published var record: Record = Record(
         id: UUID(),
-        type: .americano,
-        size: ._300,
+        userId: UUID(),
+        drinkType: .americano,
+        drinkSize: .ml300,
         price: 10,
         date: Date(),
         place: Place(
