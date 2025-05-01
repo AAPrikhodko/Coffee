@@ -87,7 +87,7 @@ struct FullMapView2: View {
         .toolbar {
             ToolbarItem (placement: .topBarTrailing) {
                 Button {
-                    updateLocationInViewModel()
+                    updateCoordinatesInViewModel()
                     navigationPath.removeLast()
                 } label: {
                     Text("Select")
@@ -96,8 +96,8 @@ struct FullMapView2: View {
         }
     }
     
-    func updateLocationInViewModel() {
-        locationViewModel.location = locationPickerViewModel.selectedLocation
+    func updateCoordinatesInViewModel() {
+        locationViewModel.coordinates = Coordinates(from: locationPickerViewModel.selectedLocation.coordinate)
     }
 }
 

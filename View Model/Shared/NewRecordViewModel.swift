@@ -26,8 +26,8 @@ class NewRecordViewModel: ObservableObject {
         )
     )
     
-    func updateLocation(_ location: CLLocation) {
-        self.record.place.location = location
+    func updateCoordinates(_ coordinates: Coordinates) {
+        self.record.place.coordinates = coordinates
     }
     
     func updateAddress(_ address: String) {
@@ -36,7 +36,7 @@ class NewRecordViewModel: ObservableObject {
     
     func updateAddressByLocation(_ location: CLLocation) {
         CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
-            DispatchQueue.main.async { // ✅ Ensures updates happen on the main thread
+            DispatchQueue.main.async { 
                 if let error = error {
                     self.record.place.address = ""
                     print(error.localizedDescription)

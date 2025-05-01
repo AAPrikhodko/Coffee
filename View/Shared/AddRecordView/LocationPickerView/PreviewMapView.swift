@@ -18,11 +18,11 @@ struct PreviewMapView: View {
     var body: some View {
         Map(position: $mapCameraPosition, interactionModes: []) {
             if (locationViewModel.isAuthorized) {
-                Marker("Curent Location", coordinate: locationViewModel.location.coordinate)
+                Marker("Curent Location", coordinate: locationViewModel.coordinates.asCLLocationCoordinate2D)
                     .annotationTitles(.hidden)
             }
         }
-        .onChange(of: locationViewModel.location) {
+        .onChange(of: locationViewModel.coordinates) {
             updateMapCameraPosition()
             updateLocationInPicker()
         }
@@ -38,7 +38,7 @@ struct PreviewMapView: View {
         let spanDelta = locationViewModel.isAuthorized ? 0.002 : 180
         let region: MKCoordinateRegion =
                 MKCoordinateRegion(
-                    center: locationViewModel.location.coordinate,
+                    center: locationViewModel.coordinates.asCLLocationCoordinate2D,
                     span: MKCoordinateSpan(latitudeDelta: spanDelta, longitudeDelta: 2*spanDelta)
                 )
         withAnimation {
@@ -47,7 +47,7 @@ struct PreviewMapView: View {
     }
     
     func updateLocationInPicker() {
-        locationPickerViewModel.selectedLocation = locationViewModel.location
+        locationPickerViewModel.selectedLocation = locationViewModel.coordinates.clLocation
     }
     
 }

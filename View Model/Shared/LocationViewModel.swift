@@ -15,11 +15,18 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
     @ObservationIgnored let geocoder = CLGeocoder()
     
     var isAuthorized: Bool = false
-    var location: CLLocation = CLLocation(latitude: 0, longitude: 0) {
+    
+    var coordinates: Coordinates = Coordinates(latitude: 0, longitude: 0) {
         didSet {
             updateAddress()
         }
     }
+    
+//    var location: CLLocation = CLLocation(latitude: 0, longitude: 0) {
+//        didSet {
+//            updateAddress()
+//        }
+//    }
     var address: String = "No data"
     
     override init() {
@@ -40,7 +47,7 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let currentLocation = locations.last else { return }
-        location = currentLocation
+        coordinates = Coordinates(from: currentLocation.coordinate)
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -64,7 +71,7 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
     }
     
     private func updateAddress() {
-        geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
+        geocoder.reverseGeocodeLocation(coordinates.clLocation) { [weak self] placemarks, _ in
             guard let placemark = placemarks?.first else { return }
             
             let currentAddress = [

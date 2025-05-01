@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Record: Identifiable, Hashable {
+struct Record: Identifiable, Hashable, Codable {
     var id: UUID
     var userId: UUID
     var drinkType: DrinkType

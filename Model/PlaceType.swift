@@ -5,7 +5,7 @@
 //  Created by Andrei on 29.04.2025.
 //
 
-enum PlaceType: Int, Identifiable, CaseIterable, Hashable {
+enum PlaceType: Int, Identifiable, CaseIterable, Hashable, Codable {
     case bar
     case cafe
     case hotel
