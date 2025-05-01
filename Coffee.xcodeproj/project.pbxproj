@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		75688C232DC3A82400275524 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75D360942DC27AF6007843D3 /* GoogleService-Info.plist */; };
 		75D35F9F2DB27D92007843D3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75D35F9B2DB27D92007843D3 /* Assets.xcassets */; };
 		75D35FCC2DB27D92007843D3 /* CoffeeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D35F9C2DB27D92007843D3 /* CoffeeApp.swift */; };
-		75D35FCD2DB27D92007843D3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D35F9D2DB27D92007843D3 /* ContentView.swift */; };
 		75D360972DC27CA7007843D3 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 75D360962DC27CA7007843D3 /* FirebaseAnalytics */; };
 		75D360992DC27CA7007843D3 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 75D360982DC27CA7007843D3 /* FirebaseAuth */; };
 		75D3609B2DC27CA7007843D3 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 75D3609A2DC27CA7007843D3 /* FirebaseCore */; };
@@ -20,7 +20,6 @@
 /* Begin PBXFileReference section */
 		75D35F9B2DB27D92007843D3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		75D35F9C2DB27D92007843D3 /* CoffeeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeApp.swift; sourceTree = "<group>"; };
-		75D35F9D2DB27D92007843D3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		75D360942DC27AF6007843D3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		75DA51B02D44FB5F00840578 /* Coffee.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Coffee.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -39,6 +38,7 @@
 		75D360902DC27ABF007843D3 /* Exceptions for "Managers" folder in "Coffee" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AuthManager.swift,
 				LocationManager.swift,
 			);
 			target = 75DA51AF2D44FB5F00840578 /* Coffee */;
@@ -77,7 +77,9 @@
 				Shared/AddRecordView/LocationPickerView/FullMapView2.swift,
 				Shared/AddRecordView/LocationPickerView/PreviewMapView.swift,
 				Shared/AddRecordView/LocationPickerView/SearchLocationsView.swift,
+				Shared/Auth/AuthView.swift,
 				Shared/Buttons/AddDrinkButton.swift,
+				Shared/Content/ContentView.swift,
 				Tabs/Home/HomeTabView.swift,
 				Tabs/Home/Profile/Profile.swift,
 				Tabs/Home/Stats/ByDrinkType/PreviewStatByDrinkTypeView.swift,
@@ -99,11 +101,12 @@
 		75D360932DC27ABF007843D3 /* Exceptions for "View Model" folder in "Coffee" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Shared/LocationPickerViewModel.swift,
-				Shared/LocationSearchViewModel.swift,
-				Shared/LocationViewModel.swift,
-				Shared/NewRecordViewModel.swift,
-				Shared/RecordsViewModel.swift,
+				Auth/AuthViewModel.swift,
+				Location/LocationPickerViewModel.swift,
+				Location/LocationSearchViewModel.swift,
+				Location/LocationViewModel.swift,
+				Record/NewRecordViewModel.swift,
+				Record/RecordsViewModel.swift,
 			);
 			target = 75DA51AF2D44FB5F00840578 /* Coffee */;
 		};
@@ -198,7 +201,6 @@
 				75D3605B2DC27ABF007843D3 /* View Model */,
 				75D35F9B2DB27D92007843D3 /* Assets.xcassets */,
 				75D35F9C2DB27D92007843D3 /* CoffeeApp.swift */,
-				75D35F9D2DB27D92007843D3 /* ContentView.swift */,
 				75D360942DC27AF6007843D3 /* GoogleService-Info.plist */,
 				75688C152DC378C800275524 /* Frameworks */,
 			);
@@ -285,6 +287,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				75D35F9F2DB27D92007843D3 /* Assets.xcassets in Resources */,
+				75688C232DC3A82400275524 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,7 +299,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				75D35FCC2DB27D92007843D3 /* CoffeeApp.swift in Sources */,
-				75D35FCD2DB27D92007843D3 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
