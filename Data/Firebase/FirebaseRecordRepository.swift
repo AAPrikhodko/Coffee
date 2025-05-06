@@ -30,9 +30,8 @@ final class FirebaseRecordRepository: RecordRepository {
 
     // MARK: - Получение всех записей текущего пользователя
     func fetchRecords(for userId: UUID) async throws -> [Record] {
-        let uid = try getFirebaseUID()
         let snapshot = try await db.collection(collection)
-            .whereField("userId", isEqualTo: uid)
+            .whereField("userId", isEqualTo: userId.uuidString) // ✅ правильный UUID как строка
             .getDocuments()
 
         return try snapshot.documents.compactMap { document in

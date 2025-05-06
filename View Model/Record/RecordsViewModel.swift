@@ -170,18 +170,15 @@ class RecordsViewModel {
     }
     
     func loadRecords() async {
-        guard let uid = Auth.auth().currentUser?.uid,
-              let userUUID = UUID(uuidString: uid) else {
-            print("❌ Ошибка преобразования UID в UUID")
-            return
-        }
-
+        print("🧪 RecordsViewModel.loadRecords() started")
+        print("🆔 Current userId in ViewModel: \(userId.uuidString)")
+        
         do {
-            let fetched = try await recordRepository.fetchRecords(for: userUUID)
+            let fetched = try await recordRepository.fetchRecords(for: userId)
             self.records = fetched
-            print("✅ Загружено записей: \(fetched.count)")
+            print("✅ Loaded records: \(fetched.count)")
         } catch {
-            print("❌ Ошибка загрузки записей: \(error.localizedDescription)")
+            print("❌ Failed to load records: \(error.localizedDescription)")
         }
     }
 
