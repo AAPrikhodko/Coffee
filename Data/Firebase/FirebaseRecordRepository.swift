@@ -7,14 +7,32 @@
 
 import Foundation
 import FirebaseFirestore
+import FirebaseAuth
 
 final class FirebaseRecordRepository: RecordRepository {
-    private let db = Firestore.firestore()
+    private lazy var db = Firestore.firestore()
+    private lazy var auth = Auth.auth()
     private let collection = "records"
 
+    private func getFirebaseUID() throws -> String {
+        guard let uid = auth.currentUser?.uid else {
+            throw NSError(domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "Пользователь не авторизован"])
+        }
+        return uid
+    }
+
+    // MARK: - Добавление записи
+    func addRecord(_ record: Record) async throws {
+        try db.collection(collection)
+            .document(record.id.uuidString)
+            .setData(from: record)
+    }
+
+    // MARK: - Получение всех записей текущего пользователя
     func fetchRecords(for userId: UUID) async throws -> [Record] {
+        let uid = try getFirebaseUID()
         let snapshot = try await db.collection(collection)
-            .whereField("userId", isEqualTo: userId.uuidString)
+            .whereField("userId", isEqualTo: uid)
             .getDocuments()
 
         return try snapshot.documents.compactMap { document in
@@ -22,15 +40,18 @@ final class FirebaseRecordRepository: RecordRepository {
         }
     }
 
-    func addRecord(_ record: Record) async throws {
+    // MARK: - Обновление записи
+    func updateRecord(_ record: Record) async throws {
         try db.collection(collection)
             .document(record.id.uuidString)
-            .setData(from: record)
+            .setData(from: record, merge: true)
     }
 
-    func deleteRecord(withId id: UUID) async throws {
+    // MARK: - Удаление записи
+    func deleteRecord(_ recordId: UUID) async throws {
         try await db.collection(collection)
-            .document(id.uuidString)
+            .document(recordId.uuidString)
             .delete()
     }
 }
+

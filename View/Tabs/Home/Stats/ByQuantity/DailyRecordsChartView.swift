@@ -60,9 +60,3 @@ struct DailyRecordsChartView: View {
 
     }
 }
-
-#Preview {
-    DailyRecordsChartView(recordsData: Record.threeMonthsExamples())
-        .aspectRatio(1, contentMode: .fit)
-        .padding()
-}

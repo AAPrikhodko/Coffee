@@ -20,9 +20,3 @@ struct MounthlyRecordsChartsView: View {
         }
     }
 }
-
-#Preview {
-    MounthlyRecordsChartsView(recordsData: Record.threeMonthsExamples())
-        .aspectRatio(1, contentMode: .fit)
-        .padding()
-}

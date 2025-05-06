@@ -50,8 +50,3 @@ struct PreviewStatByDrinkTypeView: View {
         return formattedPercentage
     }
 }
-
-#Preview {
-    PreviewStatByDrinkTypeView(recordsViewModel: .preview)
-        .padding()
-}

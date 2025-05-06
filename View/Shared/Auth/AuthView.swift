@@ -8,8 +8,25 @@
 import SwiftUI
 
 struct AuthView: View {
-    @StateObject private var viewModel = AuthViewModel()
+    @Environment(AuthViewModel.self) var authViewModel
+    
     @State private var isLoginMode = true
+    
+    var emailBinding: Binding<String> {
+        Binding {
+            authViewModel.email
+        } set: {
+            authViewModel.email = $0
+        }
+    }
+    
+    var passwordBinding: Binding<String> {
+        Binding {
+            authViewModel.password
+        } set: {
+            authViewModel.password = $0
+        }
+    }
 
     var body: some View {
         NavigationView {
@@ -21,19 +38,19 @@ struct AuthView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 .padding()
 
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: emailBinding)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.emailAddress)
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(10)
 
-                SecureField("Password", text: $viewModel.password)
+                SecureField("Password", text: passwordBinding)
                     .padding()
                     .background(Color(.secondarySystemBackground))
                     .cornerRadius(10)
 
-                if let errorMessage = viewModel.errorMessage {
+                if let errorMessage = authViewModel.errorMessage {
                     Text(errorMessage)
                         .foregroundColor(.red)
                         .multilineTextAlignment(.center)
@@ -43,13 +60,13 @@ struct AuthView: View {
                 Button {
                     Task {
                         if isLoginMode {
-                            await viewModel.login()
+                            await authViewModel.login()
                         } else {
-                            await viewModel.register()
+                            await authViewModel.register()
                         }
                     }
                 } label: {
-                    if viewModel.isLoading {
+                    if authViewModel.isLoading {
                         ProgressView()
                     } else {
                         Text(isLoginMode ? "Login" : "Register")
@@ -60,18 +77,21 @@ struct AuthView: View {
                             .cornerRadius(10)
                     }
                 }
-                .disabled(viewModel.email.isEmpty || viewModel.password.isEmpty)
+                .disabled(authViewModel.email.isEmpty || authViewModel.password.isEmpty)
 
                 Spacer()
             }
             .padding()
             .navigationTitle(isLoginMode ? "Login" : "Register")
             .onAppear {
-                viewModel.checkAuthStatus()
+                authViewModel.checkAuthStatus()
             }
         }
-        .fullScreenCover(isPresented: $viewModel.isLoggedIn) {
-            ContentView() // ← Здесь покажем основной интерфейс
+        .fullScreenCover(isPresented: Binding(
+            get: { authViewModel.isLoggedIn },
+            set: { _ in }
+        )) {
+            ContentView()
         }
     }
 }

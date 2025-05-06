@@ -55,7 +55,3 @@ struct StatByQuantityView: View {
         .padding()
     }
 }
-
-#Preview {
-    StatByQuantityView(recordsViewModel: .preview)
-}

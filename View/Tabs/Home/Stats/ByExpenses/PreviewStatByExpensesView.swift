@@ -37,7 +37,3 @@ struct PreviewStatByExpensesView: View {
         }
     }
 }
-
-#Preview {
-    PreviewStatByExpensesView(recordsViewModel: .preview)
-}

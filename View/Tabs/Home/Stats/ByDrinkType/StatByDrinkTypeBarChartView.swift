@@ -28,8 +28,3 @@ struct StatByDrinkTypeBarChartView: View {
         .frame(maxHeight: 400)
     }
 }
-
-#Preview {
-    StatByDrinkTypeBarChartView(recordsViewModel: .preview)
-        .padding()
-}

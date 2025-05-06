@@ -10,26 +10,38 @@ import MapKit
 
 struct AddRecordView: View {
     @Binding var isSheetShown: Bool
-    @Binding var recordsViewModel: RecordsViewModel
-    
-    @StateObject var recordViewModel = NewRecordViewModel()
-    @State private var navigationPath = [NewRecordRoute]()
-    
+
+    @State private var newRecordViewModel: NewRecordViewModel
     @State private var locationViewModel = LocationViewModel()
     @State private var locationPickerViewModel = LocationPickerViewModel()
+    @State private var navigationPath: [NewRecordRoute] = []
+
+    init(
+        isSheetShown: Binding<Bool>,
+        authViewModel: AuthViewModel,
+        recordsViewModel: RecordsViewModel
+    ) {
+        self._isSheetShown = isSheetShown
+        self._newRecordViewModel = State(
+            initialValue: NewRecordViewModel(
+                authViewModel: authViewModel,
+                recordsViewModel: recordsViewModel
+            )
+        )
+    }
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Form {
                 Section("What drink?") {
-                    Picker("Type", selection: $recordViewModel.record.drinkType) {
+                    Picker("Type", selection: $newRecordViewModel.drinkType) {
                         ForEach(DrinkType.allCases, id: \.self) { type in
                             Text(type.displayName).tag(type)
                         }
                     }
                     .pickerStyle(.navigationLink)
                     
-                    Picker("Size", selection: $recordViewModel.record.drinkSize) {
+                    Picker("Size", selection: $newRecordViewModel.drinkSize) {
                         ForEach(DrinkSize.allCases, id: \.self) { size in
                             Text(size.displayName).tag(size)
                         }
@@ -39,7 +51,7 @@ struct AddRecordView: View {
                     HStack {
                         Text("Price:")
                         Spacer()
-                        Text("$ " + "\(String(format: "%.2f", recordViewModel.record.price))")
+                        Text("$ " + "\(String(format: "%.2f", newRecordViewModel.price))")
                             .foregroundStyle(.gray)
                     }
                 }
@@ -47,7 +59,7 @@ struct AddRecordView: View {
                 Section("What date?") {
                     DatePicker(
                         "Date",
-                        selection: $recordViewModel.record.date,
+                        selection: $newRecordViewModel.date,
                         displayedComponents: .date
                     )
                     .datePickerStyle(CompactDatePickerStyle())
@@ -68,7 +80,7 @@ struct AddRecordView: View {
                             .foregroundStyle(.gray)
                     }
                     
-                    Picker("Type", selection: $recordViewModel.record.place.type) {
+                    Picker("Type", selection: $newRecordViewModel.place.type) {
                         ForEach(PlaceType.allCases, id: \.self) { type in
                             Text(type.displayName).tag(type)
                         }
@@ -95,21 +107,28 @@ struct AddRecordView: View {
             }
             .toolbar {
                 Button {
-                    isSheetShown = false
-                    recordsViewModel.addRecord(recordViewModel.record)
+                    Task {
+                        let success = await newRecordViewModel.save()
+                        if success {
+                            isSheetShown = false
+                        }
+                    }
                 } label: {
-                    Text("Add")
+                    if newRecordViewModel.isSaving {
+                        ProgressView()
+                    } else {
+                        Text("Add")
+                    }
                 }
-                .padding()
-                
+                .disabled(newRecordViewModel.isSaving)
             }
+            .alert("Ошибка", isPresented: .constant(newRecordViewModel.errorMessage != nil)) {
+                 Button("OK", role: .cancel) {
+                     newRecordViewModel.errorMessage = nil
+                 }
+             } message: {
+                 Text(newRecordViewModel.errorMessage ?? "")
+             }
         }
     }
-}
-
-#Preview {
-    AddRecordView(
-        isSheetShown: .constant(true),
-        recordsViewModel: .constant(RecordsViewModel())
-    )
 }

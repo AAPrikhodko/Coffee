@@ -86,9 +86,3 @@ struct WeeklyRecordsChartView: View {
         }
     }
 }
-
-#Preview {
-    WeeklyRecordsChartView(recordsViewModel: RecordsViewModel.preview)
-        .aspectRatio(1, contentMode: .fit)
-        .padding()
-}

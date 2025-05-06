@@ -10,14 +10,19 @@ import FirebaseAuth
 import FirebaseFirestore
 
 final class FirebaseUserRepository: UserRepository {
-    private let db = Firestore.firestore()
-    private let auth = Auth.auth()
+    private lazy var db = Firestore.firestore()
+    private lazy var auth = Auth.auth()
     private let collection = "users"
+    
+    private func getFirebaseUID() throws -> String {
+        guard let uid = auth.currentUser?.uid else {
+            throw NSError(domain: "auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "Пользователь не авторизован"])
+        }
+        return uid
+    }
 
     func fetchCurrentUser() async throws -> User {
-        guard let uid = auth.currentUser?.uid else {
-            throw NSError(domain: "AuthError", code: 401, userInfo: [NSLocalizedDescriptionKey: "User not logged in"])
-        }
+        let uid = try getFirebaseUID()
 
         let docRef = db.collection(collection).document(uid)
         let document = try await docRef.getDocument()
@@ -27,11 +32,18 @@ final class FirebaseUserRepository: UserRepository {
     }
 
     func createUser(_ user: User) async throws {
-        try db.collection(collection).document(user.id.uuidString).setData(from: user)
+        let uid = try getFirebaseUID()
+        try db.collection(collection).document(uid).setData(from: user)
     }
 
+//    func updateUser(_ user: User) async throws {
+//        try db.collection(collection).document(user.id.uuidString).setData(from: user, merge: true)
+//    }
     func updateUser(_ user: User) async throws {
-        try db.collection(collection).document(user.id.uuidString).setData(from: user, merge: true)
+        let uid = try getFirebaseUID()
+        try db.collection("users")
+            .document(uid)
+            .setData(from: user, merge: true)
     }
 }
 

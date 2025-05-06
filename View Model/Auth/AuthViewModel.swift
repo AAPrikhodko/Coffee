@@ -6,17 +6,25 @@
 //
 
 import Foundation
-import Combine
+import SwiftUI
 
-@MainActor
-final class AuthViewModel: ObservableObject {
-    @Published var email: String = ""
-    @Published var password: String = ""
-    @Published var isLoggedIn: Bool = false
-    @Published var errorMessage: String?
-    @Published var isLoading: Bool = false
+@Observable
+class AuthViewModel {
+    // MARK: - Данные пользователя
+    var currentUser: User?
 
+    // MARK: - Вводимые данные
+    var email: String = ""
+    var password: String = ""
+
+    // MARK: - Состояние
+    var isLoggedIn: Bool = false
+    var isLoading: Bool = false
+    var errorMessage: String?
+
+    // MARK: - Зависимости
     private let authManager = AuthManager.shared
+    private let userRepository: UserRepository = FirebaseUserRepository()
 
     // MARK: - Регистрация
     func register() async {
@@ -26,6 +34,20 @@ final class AuthViewModel: ObservableObject {
         do {
             let uid = try await authManager.register(email: email, password: password)
             print("✅ Зарегистрирован: \(uid)")
+
+            let newUser = User(
+                id: UUID(),
+                firstName: "",
+                lastName: "",
+                avatarURL: nil,
+                country: "",
+                registrationDate: Date(),
+                favoriteDrink: nil,
+                achievements: [.newcomer]
+            )
+
+            try await userRepository.createUser(newUser)
+            currentUser = newUser
             isLoggedIn = true
         } catch {
             errorMessage = error.localizedDescription
@@ -42,6 +64,9 @@ final class AuthViewModel: ObservableObject {
         do {
             let uid = try await authManager.login(email: email, password: password)
             print("✅ Вошел: \(uid)")
+
+            let user = try await userRepository.fetchCurrentUser()
+            currentUser = user
             isLoggedIn = true
         } catch {
             errorMessage = error.localizedDescription
@@ -54,14 +79,26 @@ final class AuthViewModel: ObservableObject {
     func logout() {
         do {
             try authManager.logout()
+            currentUser = nil
             isLoggedIn = false
         } catch {
             errorMessage = error.localizedDescription
         }
     }
 
-    // MARK: - Проверка при старте
+    // MARK: - Проверка при запуске
     func checkAuthStatus() {
         isLoggedIn = authManager.isUserLoggedIn()
+
+        Task {
+            if isLoggedIn {
+                do {
+                    currentUser = try await userRepository.fetchCurrentUser()
+                } catch {
+                    errorMessage = "Не удалось загрузить пользователя: \(error.localizedDescription)"
+                    isLoggedIn = false
+                }
+            }
+        }
     }
 }

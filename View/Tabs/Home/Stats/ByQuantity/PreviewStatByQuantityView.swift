@@ -64,7 +64,7 @@ struct PreviewStatByQuantityView: View {
 }
 
 #Preview {
-    PreviewStatByQuantityView(recordsViewModel: RecordsViewModel())
+    PreviewStatByQuantityView(recordsViewModel: RecordsViewModel(user: .dummy))
         .aspectRatio(1, contentMode: .fit)
         .padding()
 }

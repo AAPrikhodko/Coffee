@@ -8,67 +8,23 @@
 import Foundation
 import CoreLocation
 import MapKit
+import FirebaseAuth
+import SwiftUI
 
 @Observable
 class RecordsViewModel {
-      var records: [Record] = []
-//    var records = Record.threeMonthsExamples()
-//    var records = Record.examples
-//    [
-//        Record(
-//            id: UUID(),
-//            type: .americano,
-//            size: ._300,
-//            price: 10,
-//            date: Date(),
-//            place: Place(
-//                id: UUID(),
-//                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
-//                address: "",
-//                type: .cafe
-//            )
-//        ),
-//        Record(
-//            id: UUID(),
-//            type: .cappuccino,
-//            size: ._200,
-//            price: 12.99,
-//            date: Date(),
-//            place: Place(
-//                id: UUID(),
-//                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
-//                address: "",
-//                type: .cafe
-//            )
-//        ),
-//        Record(
-//            id: UUID(),
-//            type: .espresso,
-//            size: ._100,
-//            price: 7.55,
-//            date: Date(),
-//            place: Place(
-//                id: UUID(),
-//                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
-//                address: "",
-//                type: .hotel
-//            )
-//        ),
-//        Record(
-//            id: UUID(),
-//            type: .latte,
-//            size: ._400,
-//            price: 15.00,
-//            date: Date(),
-//            place: Place(
-//                id: UUID(),
-//                location: CLLocation(latitude: 37.7749, longitude: -122.4194),
-//                address: "",
-//                type: .hotel
-//            )
-//        ),
-//    ]
+    private let recordRepository: RecordRepository = FirebaseRecordRepository()
     
+    var records: [Record] = []
+    var userId: UUID
+
+    init(user: User) {
+        self.userId = user.id
+        Task {
+            await loadRecords()
+        }
+    }
+
     var totalRecords: Int {
         return records.count
     }
@@ -110,8 +66,11 @@ class RecordsViewModel {
         totalRecordsPerDrinkType.max { $0.records < $1.records }
     }
     
-    init() {
-        // get records
+    func reset(for newUserId: UUID) {
+        self.userId = newUserId
+        Task {
+            await loadRecords()
+        }
     }
     
     func recordsGroupedByDay(records: [Record]) -> [Date: [Record]] {
@@ -210,15 +169,25 @@ class RecordsViewModel {
         return totalRecords
     }
     
-    static var preview: RecordsViewModel {
-        let vm = RecordsViewModel()
-        vm.records = Record.threeMonthsExamples()
-        
-        return vm
+    func loadRecords() async {
+        guard let uid = Auth.auth().currentUser?.uid,
+              let userUUID = UUID(uuidString: uid) else {
+            print("❌ Ошибка преобразования UID в UUID")
+            return
+        }
+
+        do {
+            let fetched = try await recordRepository.fetchRecords(for: userUUID)
+            self.records = fetched
+            print("✅ Загружено записей: \(fetched.count)")
+        } catch {
+            print("❌ Ошибка загрузки записей: \(error.localizedDescription)")
+        }
     }
-    
-    func addRecord(_ record: Record) {
-        records.append(record)
+
+    func addRecord(_ record: Record) async throws {
+        try await recordRepository.addRecord(record)
+        self.records.append(record)
     }
 }
 

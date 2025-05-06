@@ -49,8 +49,3 @@ struct StatByDrinkTypeView: View {
         Spacer()
     }
 }
-
-#Preview {
-    StatByDrinkTypeView(recordsViewModel: .preview)
-        .padding()
-}

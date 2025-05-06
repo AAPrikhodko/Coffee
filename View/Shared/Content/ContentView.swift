@@ -8,24 +8,49 @@
 import SwiftUI
 
 struct ContentView: View {
-    
-    @State private var recordsViewModel = RecordsViewModel()
+    @Environment(AuthViewModel.self) private var authViewModel
+    @State private var recordsViewModel: RecordsViewModel?
     
     var body: some View {
-        TabView {
-            Tab("Home", systemImage: "house") {
-                HomeTabView(
-                    recordsViewModel: $recordsViewModel
-                )
+        Group {
+            if let recordsViewModel {
+                TabView {
+                    Tab("Home", systemImage: "house") {
+                        HomeTabView().environment(recordsViewModel)
+                    }
+                    
+                    Tab("My Map", systemImage: "map") {
+                        MyMapTabView()
+                    }
+                    
+                    Tab("Settings", systemImage: "gearshape") {
+                        SettingsTabView()
+                    }
+                }
+            } else {
+                ProgressView("Loading...")
             }
-            
-            Tab("My Map", systemImage: "map") {
-                MyMapTabView()
+        }
+        .onAppear {
+            updateRecordsViewModelIfNeeded()
+        }
+        .onChange(of: authViewModel.currentUser) { oldUser, newUser in
+            updateRecordsViewModelIfNeeded()
+        }
+    }
+    
+    private func updateRecordsViewModelIfNeeded() {
+        guard let user = authViewModel.currentUser else {
+            recordsViewModel = nil
+            return
+        }
+
+        if let existingVM = recordsViewModel {
+            if existingVM.userId != user.id {
+                existingVM.reset(for: user.id)
             }
-            
-            Tab("Settings", systemImage: "gearshape") {
-                SettingsTabView()
-            }
+        } else {
+            recordsViewModel = RecordsViewModel(user: user)
         }
     }
 }

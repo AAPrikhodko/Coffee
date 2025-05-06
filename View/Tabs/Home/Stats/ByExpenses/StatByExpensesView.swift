@@ -32,7 +32,3 @@ struct StatByExpensesView: View {
         }
     }
 }
-
-#Preview {
-    StatByExpensesView(recordsViewModel: .preview)
-}

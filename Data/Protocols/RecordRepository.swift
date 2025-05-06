@@ -8,7 +8,8 @@
 import Foundation
 
 protocol RecordRepository {
-    func fetchRecords(for userId: UUID) async throws -> [Record]
     func addRecord(_ record: Record) async throws
-    func deleteRecord(withId id: UUID) async throws
+    func fetchRecords(for userId: UUID) async throws -> [Record]
+    func updateRecord(_ record: Record) async throws
+    func deleteRecord(_ recordId: UUID) async throws
 }

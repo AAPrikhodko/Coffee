@@ -52,8 +52,3 @@ struct StatByDrinkTypePieChartView: View {
 
     }
 }
-
-#Preview {
-    StatByDrinkTypePieChartView(recordsViewModel: .preview)
-        .padding()
-}

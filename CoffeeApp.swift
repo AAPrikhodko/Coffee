@@ -10,13 +10,15 @@ import Firebase
 
 @main
 struct CoffeeApp: App {
+    @State private var authViewModel = AuthViewModel()
+    
     init() {
         FirebaseApp.configure()
     }
     
     var body: some Scene {
         WindowGroup {
-            AuthView()
+            AuthView().environment(authViewModel)
         }
     }
 }

@@ -8,14 +8,19 @@
 import SwiftUI
 
 struct HomeTabView: View {
-    @Binding var recordsViewModel: RecordsViewModel
+    @Environment(AuthViewModel.self) private var authViewModel
+    @Environment(RecordsViewModel.self) private var recordsViewModel
     
     @State private var showAddDrinkSheet: Bool = false
     
     var body: some View {
         NavigationStack() {
-            UserInfo()
-                .padding()
+            NavigationLink {
+                ProfileView()
+            } label: {
+                ProfilPreviewView()
+                    .padding()
+            }
             
             List {
                 Section {
@@ -49,7 +54,8 @@ struct HomeTabView: View {
                 .fullScreenCover(isPresented: $showAddDrinkSheet) {
                     AddRecordView(
                         isSheetShown: $showAddDrinkSheet,
-                        recordsViewModel: $recordsViewModel
+                        authViewModel: authViewModel,
+                        recordsViewModel: recordsViewModel
                     )
                 }
         }
@@ -57,7 +63,5 @@ struct HomeTabView: View {
 }
 
 #Preview {
-    HomeTabView(
-        recordsViewModel: .constant(RecordsViewModel())
-    )
+    HomeTabView()
 }
