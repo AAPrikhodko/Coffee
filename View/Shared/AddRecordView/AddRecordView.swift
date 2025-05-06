@@ -15,6 +15,8 @@ struct AddRecordView: View {
     @State private var locationViewModel = LocationViewModel()
     @State private var locationPickerViewModel = LocationPickerViewModel()
     @State private var navigationPath: [NewRecordRoute] = []
+    @State private var isEditingPrice = false
+    @FocusState private var isPriceFieldFocused: Bool
 
     init(
         isSheetShown: Binding<Bool>,
@@ -29,6 +31,8 @@ struct AddRecordView: View {
             )
         )
     }
+    
+    
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -49,11 +53,54 @@ struct AddRecordView: View {
                     .pickerStyle(.navigationLink)
                     
                     HStack {
-                        Text("Price:")
+                        Text("Price")
                         Spacer()
-                        Text("$ " + "\(String(format: "%.2f", newRecordViewModel.price))")
-                            .foregroundStyle(.gray)
+                        
+                        HStack(spacing: 10) {
+                            if isEditingPrice {
+                                TextField("0.00", value: $newRecordViewModel.price, format: .number.precision(.fractionLength(2)))
+                                    .keyboardType(.decimalPad)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 80)
+                                    .focused($isPriceFieldFocused)
+                                    .onSubmit {
+                                        isEditingPrice = false
+                                    }
+                                    .onChange(of: isPriceFieldFocused) {
+                                        if !isPriceFieldFocused {
+                                            isEditingPrice = false
+                                        }
+                                    }
+                            } else {
+                                Text(String(format: "%.2f", newRecordViewModel.price))
+                                    .foregroundStyle(.gray)
+                                    .frame(width: 80, alignment: .trailing)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            isEditingPrice = true
+                                            isPriceFieldFocused = true
+                                        }
+                                    }
+                            }
+
+                            Menu {
+                                ForEach(Currency.allCases) { currency in
+                                    Button(currency.displayName) {
+                                        newRecordViewModel.currency = currency
+                                    }
+                                }
+                            } label: {
+                                Text(newRecordViewModel.currency.displayName)
+                                    .foregroundColor(.primary)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
+                                    .background(Color.gray.opacity(0.2))
+                                    .cornerRadius(6)
+                            }
+                        }
                     }
+
+
                 }
                 
                 Section("What date?") {
@@ -131,4 +178,11 @@ struct AddRecordView: View {
              }
         }
     }
+}
+
+#Preview {
+    AddRecordView(
+        isSheetShown: .constant(false),
+        authViewModel: AuthViewModel(),
+        recordsViewModel: RecordsViewModel(user: .dummy))
 }

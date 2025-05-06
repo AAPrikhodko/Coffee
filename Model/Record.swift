@@ -13,6 +13,7 @@ struct Record: Identifiable, Hashable, Codable {
     var drinkType: DrinkType
     var drinkSize: DrinkSize
     var price: Double
+    var currency: Currency
     var date: Date
     var place: Place
 }

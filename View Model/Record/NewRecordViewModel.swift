@@ -162,7 +162,7 @@ class NewRecordViewModel: ObservableObject {
     var drinkType: DrinkType = .americano
     var drinkSize: DrinkSize = .ml250
     var price: Double = 0
-    var currency: String = "USD"
+    var currency: Currency = .usd
     var date: Date = Date()
     var place: Place = Place(
         id: UUID(),
@@ -194,6 +194,7 @@ class NewRecordViewModel: ObservableObject {
             drinkType: drinkType,
             drinkSize: drinkSize,
             price: price,
+            currency: currency,
             date: date,
             place: place
         )

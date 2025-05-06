@@ -47,6 +47,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				AchievementType.swift,
+				Currency.swift,
 				DrinkSize.swift,
 				DrinkType.swift,
 				EquatableCoordinateRegion.swift,
