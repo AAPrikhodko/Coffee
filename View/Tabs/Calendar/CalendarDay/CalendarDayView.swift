@@ -20,14 +20,12 @@ struct CalendarDayView: View {
             .background(
                 ZStack {
                     if isSelected {
-                        Circle()
-                            .fill(Color.accentColor)
+                        Circle().fill(Color.accentColor)
                     } else if isToday {
-                        Circle()
-                            .strokeBorder(Color.accentColor, lineWidth: 1.5)
+                        Circle().stroke(Color.accentColor, lineWidth: 1.5)
                     } else if hasRecord {
                         Circle()
-                            .fill(Color.accentColor.opacity(0.15))
+                            .fill(Color.accentColor.opacity(isInCurrentMonth ? 0.15 : 0.06))
                     }
                 }
             )

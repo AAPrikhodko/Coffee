@@ -87,12 +87,10 @@ struct CalendarTabView: View {
                     ContentUnavailableView("No records", systemImage: "calendar.badge.exclamation")
                 } else {
                     List(visibleRecords) { record in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(record.drinkType.displayName)
-                                .font(.headline)
-                            Text(record.place.address)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        NavigationLink {
+//                            AddRecordView(editingRecord: record) // будем реализовывать
+                        } label: {
+                            RecordRowView(record: record)
                         }
                     }
                 }

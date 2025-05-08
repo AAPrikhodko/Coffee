@@ -27,5 +27,15 @@ enum PlaceType: Int, Identifiable, CaseIterable, Hashable, Codable {
         }
     }
     
+    var icon: String {
+        switch self {
+        case .bar: return "🍸"
+        case .cafe: return "☕️"
+        case .hotel: return "🏨"
+        case .home: return "🏠"
+        case .office: return "🏢"
+        }
+    }
+    
     var id: Int { rawValue }
 }

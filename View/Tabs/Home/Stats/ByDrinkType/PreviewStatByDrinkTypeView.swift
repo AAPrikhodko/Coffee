@@ -62,9 +62,7 @@ struct PreviewStatByDrinkTypeView: View {
     }
 
     private var favourite: DrinkTypeStats? {
-        print("totalRecordsPerDrinkType:", recordsViewModel.totalRecordsPerDrinkType)
-        print("drinkStats:", recordsViewModel.drinkStats)
-        return topStats.first
+        topStats.first
     }
 
     var body: some View {

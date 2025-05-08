@@ -86,6 +86,7 @@
 				Tabs/Calendar/CalendarDay/CalendarDayView.swift,
 				Tabs/Calendar/CalendarMonthGrid/CalendarMonthGridView.swift,
 				Tabs/Calendar/CalendarTabView.swift,
+				Tabs/Calendar/RecordRow/RecordRowView.swift,
 				Tabs/Home/HomeTabView.swift,
 				Tabs/Home/ProfilePreview/Profile/ProfileView.swift,
 				Tabs/Home/ProfilePreview/ProfilePreviewView.swift,
