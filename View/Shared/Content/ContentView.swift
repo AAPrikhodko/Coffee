@@ -19,6 +19,10 @@ struct ContentView: View {
                         HomeTabView().environment(recordsViewModel)
                     }
                     
+                    Tab("Calendar", systemImage: "calendar") {
+                        CalendarTabView().environment(recordsViewModel)
+                    }
+                    
                     Tab("My Map", systemImage: "map") {
                         MyMapTabView()
                     }
