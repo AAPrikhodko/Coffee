@@ -25,25 +25,25 @@ struct HomeTabView: View {
             List {
                 Section {
                     NavigationLink {
-                        StatByQuantityView(recordsViewModel: recordsViewModel)
+                        StatByQuantityView()
                     } label: {
-                        PreviewStatByQuantityView(recordsViewModel: recordsViewModel)
+                        PreviewStatByQuantityView()
                     }
                 }
                 
                 Section {
                     NavigationLink {
-                        StatByDrinkTypeView(recordsViewModel: recordsViewModel)
+                        StatByDrinkTypeView()
                     } label: {
-                        PreviewStatByDrinkTypeView(recordsViewModel: recordsViewModel)
+                        PreviewStatByDrinkTypeView()
                     }
                 }
                 
                 Section {
                     NavigationLink {
-                        StatByExpensesView(recordsViewModel: recordsViewModel)
+                        StatByExpensesView()
                     } label: {
-                        PreviewStatByExpensesView(recordsViewModel: recordsViewModel)
+                        PreviewStatByExpensesView()
                     }
                 }
             }

@@ -25,125 +25,169 @@ class RecordsViewModel {
         }
     }
 
-    var totalRecords: Int {
-        return records.count
-    }
-    
-    var lastTotalRecords: Int = 270
-    
-    var recordsByDay: [(day: Date, records: Int)] {
-        let recordsByDay = recordsGroupedByDay(records: records)
-        return totalRecordsPerDate(recordsByDate: recordsByDay)
-    }
-    
-    var recordsByWeek:[(day: Date, records: Int)] {
-        let recordsByWeek = recordsGroupedByWeek(records: records)
-        return totalRecordsPerDate(recordsByDate: recordsByWeek)
-    }
-    
-    var recordsByMonth: [(day: Date, records: Int)] {
-        let recordsByMonth = recordsGroupedByMonth(records: records)
-        return totalRecordsPerDate(recordsByDate: recordsByMonth)
-    }
-    
-    var expensesByMonth: [ExpenseStates] {
-        let recordsByMonth = recordsGroupedByMonth(records: records)
-        let expensesByMonth = totalExpensesPerDate(recordsByDate: recordsByMonth)
-        return expensesByMonth.sorted { $0.day < $1.day }
-    }
-    
-    var totalExpenses: Double {
-        return records.reduce(0) { $0 + $1.price }
-    }
-    
+//    var totalRecords: Int {
+//        return records.count
+//    }
+//    
+//    var lastTotalRecords: Int = 270
+//    
+//    var recordsByDay: [(day: Date, records: Int)] {
+//        let recordsByDay = recordsGroupedByDay(records: records)
+//        return totalRecordsPerDate(recordsByDate: recordsByDay)
+//    }
+//    
+//    var recordsByWeek:[(day: Date, records: Int)] {
+//        let recordsByWeek = recordsGroupedByWeek(records: records)
+//        return totalRecordsPerDate(recordsByDate: recordsByWeek)
+//    }
+//    
+//    var recordsByMonth: [(day: Date, records: Int)] {
+//        let recordsByMonth = recordsGroupedByMonth(records: records)
+//        return totalRecordsPerDate(recordsByDate: recordsByMonth)
+//    }
+//    
+//    var expensesByMonth: [ExpenseStates] {
+//        let recordsByMonth = recordsGroupedByMonth(records: records)
+//        let expensesByMonth = totalExpensesPerDate(recordsByDate: recordsByMonth)
+//        return expensesByMonth.sorted { $0.day < $1.day }
+//    }
+//    
+//    var totalExpenses: Double {
+//        return records.reduce(0) { $0 + $1.price }
+//    }
+//    
     var totalRecordsPerDrinkType: [(drinkType: DrinkType, records: Int)] {
         let recordsByDrinkType = recordsGroupedByDrinkType(records: records)
         let totalRecordsPerDrinkType = totalRecordsPerDrinkType(recordsByCoffeType: recordsByDrinkType)
         return totalRecordsPerDrinkType.sorted { $0.records > $1.records }
     }
-    
+//    
     var favouriteDrinkType: (drinkType: DrinkType, records: Int)? {
         totalRecordsPerDrinkType.max { $0.records < $1.records }
     }
     
-    func reset(for newUserId: UUID) {
-        self.userId = newUserId
-        Task {
-            await loadRecords()
+    var drinkStats: [DrinkTypeStats] {
+        let grouped = Dictionary(grouping: records, by: \.drinkType)
+        return grouped.map { (key, values) in
+            DrinkTypeStats(type: key, count: values.count)
         }
+        .sorted { $0.count > $1.count }
     }
     
-    func recordsGroupedByDay(records: [Record]) -> [Date: [Record]] {
-        var recordsByDay: [Date: [Record]] = [:]
-        
+    var expensesByMonth: [MonthlyExpense] {
         let calendar = Calendar.current
-        for record in records {
-            let date = calendar.startOfDay(for: record.date) // get start of the day for the sale date
-            if recordsByDay[date] != nil {
-                recordsByDay[date]!.append(record)
-            } else {
-                recordsByDay[date] = [record]
-            }
+        let grouped = Dictionary(grouping: records) {
+            calendar.date(from: calendar.dateComponents([.year, .month], from: $0.date)) ?? $0.date
         }
-        
-        return recordsByDay
+
+        return grouped.map { (key, values) in
+            MonthlyExpense(month: key, total: values.reduce(0) { $0 + $1.price })
+        }
+        .sorted { $0.month < $1.month }
     }
-    
-    func recordsGroupedByWeek(records: [Record]) -> [Date: [Record]] {
-        var recordsByWeek: [Date: [Record]] = [:]
-        
+
+    // MARK: - Универсальная группировка по дате
+    func records(for interval: DateInterval) -> [(date: Date, count: Int)] {
+        groupRecords(in: interval)
+    }
+
+    private func groupRecords(in interval: DateInterval) -> [(date: Date, count: Int)] {
         let calendar = Calendar.current
-        for record in records {
-            guard let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: record.date)) else { continue }
-            if recordsByWeek[startOfWeek] != nil {
-                recordsByWeek[startOfWeek]!.append(record)
-            } else {
-                recordsByWeek[startOfWeek] = [record]
-            }
+
+        let grouped = Dictionary(grouping: records.filter { interval.contains($0.date) }) {
+            calendar.startOfDay(for: $0.date)
         }
-        
-        return recordsByWeek
+
+        let allDates = stride(
+            from: calendar.startOfDay(for: interval.start),
+            to: calendar.startOfDay(for: interval.end),
+            by: 60 * 60 * 24
+        ).map { calendar.startOfDay(for: $0) }
+
+        return allDates.map { date in
+            (date: date, count: grouped[date]?.count ?? 0)
+        }
     }
     
-    func recordsGroupedByMonth(records: [Record]) -> [Date: [Record]] {
-        var recordsByMonth: [Date: [Record]] = [:]
-        
+    func recordsGroupedByDay(forLast days: Int) -> [(date: Date, count: Int)] {
         let calendar = Calendar.current
-        for record in records {
-            guard let startOfMonth = calendar.date(from: calendar.dateComponents([.month], from: record.date)) else { continue }
-            if recordsByMonth[startOfMonth] != nil {
-                recordsByMonth[startOfMonth]!.append(record)
-            } else {
-                recordsByMonth[startOfMonth] = [record]
-            }
-        }
-        
-        return recordsByMonth
+        let now = Date()
+        let start = calendar.date(byAdding: .day, value: -days, to: now)!
+        let interval = DateInterval(start: calendar.startOfDay(for: start), end: calendar.startOfDay(for: now))
+        return groupRecords(in: interval)
     }
     
-    func totalRecordsPerDate(recordsByDate: [Date: [Record]]) -> [(day: Date, records: Int)] {
-        var totalRecords: [(day: Date, records: Int)] = []
-        
-        for (date, records) in recordsByDate {
-            totalRecords.append((day: date, records: records.count))
-        }
-        
-        return totalRecords
-    }
-    
-    func totalExpensesPerDate(recordsByDate: [Date: [Record]]) -> [ExpenseStates] {
-        var totalExpenses: [ExpenseStates] = []
-        
-        for (date, records) in recordsByDate {
-            let totalExpensesForDate = records.reduce(0) { $0 + $1.price }
-            let newTotalExpensesForDate = ExpenseStates(day: date, expenses: totalExpensesForDate)
-        
-            totalExpenses.append(newTotalExpensesForDate)
-        }
-        
-        return totalExpenses
-    }
-    
+//    func recordsGroupedByDay(records: [Record]) -> [Date: [Record]] {
+//        var recordsByDay: [Date: [Record]] = [:]
+//        
+//        let calendar = Calendar.current
+//        for record in records {
+//            let date = calendar.startOfDay(for: record.date) // get start of the day for the sale date
+//            if recordsByDay[date] != nil {
+//                recordsByDay[date]!.append(record)
+//            } else {
+//                recordsByDay[date] = [record]
+//            }
+//        }
+//        
+//        return recordsByDay
+//    }
+//    
+//    func recordsGroupedByWeek(records: [Record]) -> [Date: [Record]] {
+//        var recordsByWeek: [Date: [Record]] = [:]
+//        
+//        let calendar = Calendar.current
+//        for record in records {
+//            guard let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: record.date)) else { continue }
+//            if recordsByWeek[startOfWeek] != nil {
+//                recordsByWeek[startOfWeek]!.append(record)
+//            } else {
+//                recordsByWeek[startOfWeek] = [record]
+//            }
+//        }
+//        
+//        return recordsByWeek
+//    }
+//    
+//    func recordsGroupedByMonth(records: [Record]) -> [Date: [Record]] {
+//        var recordsByMonth: [Date: [Record]] = [:]
+//        
+//        let calendar = Calendar.current
+//        for record in records {
+//            guard let startOfMonth = calendar.date(from: calendar.dateComponents([.month], from: record.date)) else { continue }
+//            if recordsByMonth[startOfMonth] != nil {
+//                recordsByMonth[startOfMonth]!.append(record)
+//            } else {
+//                recordsByMonth[startOfMonth] = [record]
+//            }
+//        }
+//        
+//        return recordsByMonth
+//    }
+//    
+//    func totalRecordsPerDate(recordsByDate: [Date: [Record]]) -> [(day: Date, records: Int)] {
+//        var totalRecords: [(day: Date, records: Int)] = []
+//        
+//        for (date, records) in recordsByDate {
+//            totalRecords.append((day: date, records: records.count))
+//        }
+//        
+//        return totalRecords
+//    }
+//    
+//    func totalExpensesPerDate(recordsByDate: [Date: [Record]]) -> [ExpenseStates] {
+//        var totalExpenses: [ExpenseStates] = []
+//        
+//        for (date, records) in recordsByDate {
+//            let totalExpensesForDate = records.reduce(0) { $0 + $1.price }
+//            let newTotalExpensesForDate = ExpenseStates(day: date, expenses: totalExpensesForDate)
+//        
+//            totalExpenses.append(newTotalExpensesForDate)
+//        }
+//        
+//        return totalExpenses
+//    }
+//    
     func recordsGroupedByDrinkType(records: [Record]) -> [DrinkType: [Record]] {
         var recordsByDrinkType: [DrinkType: [Record]] = [:]
 
@@ -158,7 +202,7 @@ class RecordsViewModel {
 
         return recordsByDrinkType
     }
-    
+//    
     func totalRecordsPerDrinkType(recordsByCoffeType: [DrinkType: [Record]]) -> [(drinkType: DrinkType, records: Int)] {
         var totalRecords: [(drinkType: DrinkType, records: Int)] = []
 
@@ -170,9 +214,6 @@ class RecordsViewModel {
     }
     
     func loadRecords() async {
-        print("🧪 RecordsViewModel.loadRecords() started")
-        print("🆔 Current userId in ViewModel: \(userId.uuidString)")
-        
         do {
             let fetched = try await recordRepository.fetchRecords(for: userId)
             self.records = fetched
@@ -185,6 +226,13 @@ class RecordsViewModel {
     func addRecord(_ record: Record) async throws {
         try await recordRepository.addRecord(record)
         self.records.append(record)
+    }
+    
+    func reset(for newUserId: UUID) {
+        self.userId = newUserId
+        Task {
+            await loadRecords()
+        }
     }
 }
 
