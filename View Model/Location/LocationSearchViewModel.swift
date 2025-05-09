@@ -34,7 +34,7 @@ class LocationSearchViewModel: NSObject, ObservableObject {
     
     // MARK: - Helpers
     
-    func selectLocation(_ localSearch: MKLocalSearchCompletion, locationPickerViewModel: LocationPickerViewModel) {
+    func selectLocation(_ localSearch: MKLocalSearchCompletion, locationFullMapViewModel: LocationViewModel) {
         locationSearch(forLocalSearchCompletion: localSearch) { response, error in
             if let error = error {
                 print("Error searching: \(error.localizedDescription)")
@@ -45,7 +45,7 @@ class LocationSearchViewModel: NSObject, ObservableObject {
             let coordinate = item.placemark.coordinate
            
             self.selectedlocationCoordinate = coordinate
-            locationPickerViewModel.selectedLocation = CLLocation(
+            locationFullMapViewModel.coordinates = Coordinates(
                 latitude: coordinate.latitude,
                 longitude: coordinate.longitude
             )

@@ -18,9 +18,9 @@ struct Record: Identifiable, Hashable, Codable {
     var place: Place
 }
 
-enum NewRecordRoute {
+enum NewRecordRoute: Hashable {
     case mapPicker
-    case searchLocation
+    case searchLocation(locationFullMapViewModel: LocationViewModel)
 }
 
 extension Date {

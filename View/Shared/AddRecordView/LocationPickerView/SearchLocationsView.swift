@@ -10,7 +10,7 @@ import CoreLocation
 
 struct SearchLocationsView: View {
     @Binding var navigationPath: [NewRecordRoute]
-    @Binding var locationPickerViewModel: LocationPickerViewModel
+    var locationFullMapViewModel: LocationViewModel
     
     @State var locationSearchViewModel = LocationSearchViewModel()
     
@@ -39,7 +39,7 @@ struct SearchLocationsView: View {
                         LocationSearchResultCell(title: result.title, subtitle: result.subtitle)
                             .onTapGesture {
                                 withAnimation(.spring()) {
-                                    locationSearchViewModel.selectLocation(result, locationPickerViewModel: locationPickerViewModel)
+                                    locationSearchViewModel.selectLocation(result, locationFullMapViewModel: locationFullMapViewModel)
                                     navigationPath.removeLast()
                                     
                                 }
@@ -53,9 +53,9 @@ struct SearchLocationsView: View {
     }
 }
 
-#Preview {
-    SearchLocationsView(
-        navigationPath: .constant([.searchLocation]),
-        locationPickerViewModel: .constant(LocationPickerViewModel())
-    )
-}
+//#Preview {
+//    SearchLocationsView(
+//        navigationPath: .constant([.searchLocation]),
+//        locationPickerViewModel: .constant(LocationPickerViewModel())
+//    )
+//}

@@ -13,7 +13,7 @@ struct AddRecordView: View {
 
     @State private var newRecordViewModel: NewRecordViewModel
     @State private var locationViewModel = LocationViewModel()
-    @State private var locationPickerViewModel = LocationPickerViewModel()
+//    @State private var locationPickerViewModel = LocationPickerViewModel()
     @State private var navigationPath: [NewRecordRoute] = []
     @State private var isEditingPrice = false
     @FocusState private var isPriceFieldFocused: Bool
@@ -115,8 +115,7 @@ struct AddRecordView: View {
                 Section("What place?") {
                     PreviewMapView(
                         navigationPath: $navigationPath,
-                        locationViewModel: $locationViewModel,
-                        locationPickerViewModel: $locationPickerViewModel
+                        locationViewModel: $locationViewModel
                     )
                         .listRowInsets(EdgeInsets())
                     
@@ -127,7 +126,7 @@ struct AddRecordView: View {
                             .foregroundStyle(.gray)
                     }
                     
-                    Picker("Type", selection: $newRecordViewModel.place.type) {
+                    Picker("Type", selection: $newRecordViewModel.placeType) {
                         ForEach(PlaceType.allCases, id: \.self) { type in
                             Text(type.displayName).tag(type)
                         }
@@ -142,20 +141,19 @@ struct AddRecordView: View {
                 case .mapPicker:
                     FullMapView2(
                         navigationPath: $navigationPath,
-                        locationViewModel: $locationViewModel,
-                        locationPickerViewModel: $locationPickerViewModel
+                        locationViewModel: $locationViewModel
                     )
-                case .searchLocation:
+                case .searchLocation(let locationFullMapViewModel):
                     SearchLocationsView(
                         navigationPath: $navigationPath,
-                        locationPickerViewModel: $locationPickerViewModel
+                        locationFullMapViewModel: locationFullMapViewModel
                     )
                 }
             }
             .toolbar {
                 Button {
                     Task {
-                        let success = await newRecordViewModel.save()
+                        let success = await newRecordViewModel.save(locationViewModel: locationViewModel)
                         if success {
                             isSheetShown = false
                         }

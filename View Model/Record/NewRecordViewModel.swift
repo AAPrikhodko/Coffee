@@ -164,12 +164,13 @@ class NewRecordViewModel: ObservableObject {
     var price: Double = 0
     var currency: Currency = .usd
     var date: Date = Date()
-    var place: Place = Place(
-        id: UUID(),
-        coordinates: Coordinates(latitude: 0, longitude: 0),
-        address: "",
-        type: .cafe
-    )
+//    var place: Place = Place(
+//        id: UUID(),
+//        coordinates: Coordinates(latitude: 0, longitude: 0),
+//        address: "",
+//        type: .cafe
+//    )
+    var placeType: PlaceType = .cafe
     
     var isSaving: Bool = false
     var errorMessage: String?
@@ -182,7 +183,7 @@ class NewRecordViewModel: ObservableObject {
         self.recordsViewModel = recordsViewModel
     }
 
-    func save() async -> Bool {
+    func save(locationViewModel: LocationViewModel) async -> Bool {
         guard let user = authViewModel.currentUser else {
             errorMessage = "Пользователь не найден"
             return false
@@ -196,7 +197,12 @@ class NewRecordViewModel: ObservableObject {
             price: price,
             currency: currency,
             date: date,
-            place: place
+            place: Place(
+                id: UUID(),
+                coordinates: locationViewModel.coordinates,
+                address: locationViewModel.address,
+                type: placeType
+            )
         )
 
         isSaving = true
@@ -212,22 +218,22 @@ class NewRecordViewModel: ObservableObject {
         }
     }
 
-    func updateCoordinates(_ coordinates: Coordinates) {
-        place.coordinates = coordinates
-    }
-
-    func updateAddressByLocation(_ location: CLLocation) {
-        CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
-            DispatchQueue.main.async {
-                if let placemark = placemarks?.first {
-                    let street = placemark.thoroughfare ?? "Street"
-                    let city = placemark.locality ?? "City"
-                    let country = placemark.country ?? "Country"
-                    self.place.address = "\(street), \(city), \(country)"
-                } else {
-                    self.place.address = "Unknown address"
-                }
-            }
-        }
-    }
+//    func updateCoordinates(_ coordinates: Coordinates) {
+//        place.coordinates = coordinates
+//    }
+//
+//    func updateAddressByLocation(_ location: CLLocation) {
+//        CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
+//            DispatchQueue.main.async {
+//                if let placemark = placemarks?.first {
+//                    let street = placemark.thoroughfare ?? "Street"
+//                    let city = placemark.locality ?? "City"
+//                    let country = placemark.country ?? "Country"
+//                    self.place.address = "\(street), \(city), \(country)"
+//                } else {
+//                    self.place.address = "Unknown address"
+//                }
+//            }
+//        }
+//    }
 }

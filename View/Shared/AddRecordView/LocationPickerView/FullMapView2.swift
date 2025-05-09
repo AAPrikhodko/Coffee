@@ -11,15 +11,23 @@ import MapKit
 struct FullMapView2: View {
     @Binding var navigationPath: [NewRecordRoute]
     @Binding var locationViewModel: LocationViewModel
-    @Binding var locationPickerViewModel: LocationPickerViewModel
     
+    @State var locationFullMapViewModel: LocationViewModel
     @State private var annotationScale: CGFloat = 0.5
-     
+    
+    init(navigationPath: Binding<[NewRecordRoute]>, locationViewModel: Binding<LocationViewModel>) {
+        self._navigationPath = navigationPath
+        self._locationViewModel = locationViewModel
+
+        // Передаем начальные координаты из переданного LocationViewModel
+        _locationFullMapViewModel = State(initialValue: LocationViewModel(initialCoordinates: locationViewModel.wrappedValue.coordinates))
+    }
+    
     var body: some View {
         ZStack {
-            Map(position: $locationPickerViewModel.mapCameraPosition)
+            Map(position: $locationFullMapViewModel.mapCameraPosition)
                 .onMapCameraChange(frequency: .onEnd ) { context in
-                    locationPickerViewModel.selectedLocation = CLLocation(
+                    locationFullMapViewModel.coordinates = Coordinates(
                         latitude: context.camera.centerCoordinate.latitude,
                         longitude: context.camera.centerCoordinate.longitude
                     )
@@ -27,7 +35,7 @@ struct FullMapView2: View {
             
             VStack(spacing: 8) {
                 
-                Text(locationPickerViewModel.selectedLocationAddress)
+                Text(locationFullMapViewModel.address)
                     .font(.caption)
                     .padding(6)
                     .background(Color.white.opacity(0.8))
@@ -58,7 +66,7 @@ struct FullMapView2: View {
                 
                 HStack {
                     Button {
-                        navigationPath.append(.searchLocation)
+                        navigationPath.append(.searchLocation(locationFullMapViewModel: locationFullMapViewModel))
                     } label: {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(.blue)
@@ -71,7 +79,7 @@ struct FullMapView2: View {
                     Spacer()
                     
                     Button {
-                        locationPickerViewModel.setUserLocation()
+                        locationFullMapViewModel.setUserLocation()
                     } label: {
                         Image(systemName: "paperplane")
                             .foregroundStyle(.blue)
@@ -87,7 +95,8 @@ struct FullMapView2: View {
         .toolbar {
             ToolbarItem (placement: .topBarTrailing) {
                 Button {
-                    updateCoordinatesInViewModel()
+                    locationViewModel.updateCoordinates(locationFullMapViewModel.coordinates)
+                    locationViewModel.updateMapCameraPosition()
                     navigationPath.removeLast()
                 } label: {
                     Text("Select")
@@ -96,16 +105,17 @@ struct FullMapView2: View {
         }
     }
     
-    func updateCoordinatesInViewModel() {
-        locationViewModel.coordinates = Coordinates(from: locationPickerViewModel.selectedLocation.coordinate)
-    }
+//    func updateCoordinatesInLocationViewModel() {
+//        locationViewModel.coordinates = locationFullMapViewModel.coordinates
+//    
+//    }
 }
 
 
-#Preview {
-    FullMapView2(
-        navigationPath: .constant([NewRecordRoute]()),
-        locationViewModel: .constant(LocationViewModel()),
-        locationPickerViewModel: .constant(LocationPickerViewModel())
-    )
-}
+//#Preview {
+//    FullMapView2(
+//        navigationPath: .constant([NewRecordRoute]()),
+//        locationViewModel: .constant(LocationViewModel())
+////        locationPickerViewModel: .constant(LocationPickerViewModel())
+//    )
+//}
