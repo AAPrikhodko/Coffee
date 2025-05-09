@@ -12,8 +12,6 @@ struct PreviewMapView: View {
     @Binding var navigationPath: [NewRecordRoute]
     @Binding var locationViewModel: LocationViewModel
     
-//    @State private var mapCameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
-    
     var body: some View {
         Map(position: $locationViewModel.mapCameraPosition, interactionModes: []) {
             if (locationViewModel.isAuthorized) {
@@ -21,10 +19,6 @@ struct PreviewMapView: View {
                     .annotationTitles(.hidden)
             }
         }
-//        .onChange(of: locationViewModel.coordinates) {
-//            locationViewModel.updateMapCameraPosition()
-//            updateLocationInPicker()
-//        }
         .frame(height: 200)
         .onTapGesture {
             withAnimation(.spring()) {

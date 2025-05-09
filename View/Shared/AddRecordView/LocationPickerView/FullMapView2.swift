@@ -104,11 +104,6 @@ struct FullMapView2: View {
             }
         }
     }
-    
-//    func updateCoordinatesInLocationViewModel() {
-//        locationViewModel.coordinates = locationFullMapViewModel.coordinates
-//    
-//    }
 }
 
 
