@@ -14,7 +14,7 @@ import MapKit
 class LocationViewModel: NSObject, CLLocationManagerDelegate {
     @ObservationIgnored let manager = CLLocationManager()
     @ObservationIgnored let geocoder = CLGeocoder()
-
+    
     var mapCameraPosition: MapCameraPosition = .automatic
     var isAuthorized: Bool = false
     var address: String = "No data"
@@ -25,11 +25,7 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
             return _coordinates
         }
         set {
-            // Логирование изменений координат
-            print("Attempt to update coordinates: \(_coordinates) -> \(newValue)")
-            
-            // Обновляем координаты только в случае реального изменения
-            if _coordinates != newValue {
+            if _coordinates != newValue { // Обновляем только если координаты изменились
                 print("Coordinates updated: \(_coordinates) -> \(newValue)")
                 _coordinates = newValue
                 updateAddress()
@@ -40,15 +36,16 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
         }
     }
 
+    // Инициализатор с параметром initialCoordinates
     init(initialCoordinates: Coordinates? = nil) {
         if let initialCoordinates = initialCoordinates {
             print("Initial coordinates provided: \(initialCoordinates)")
             self._coordinates = initialCoordinates
         } else {
             print("No initial coordinates provided, using default")
-            self._coordinates = Coordinates(latitude: 48.856788, longitude: 2.351077) // Париж
+            self._coordinates = Coordinates(latitude: 0, longitude: 0)
         }
-
+        
         super.init()
         manager.delegate = self
         startLocationServices()
@@ -66,13 +63,9 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let currentLocation = locations.last else { return }
-
         let newCoordinates = Coordinates(from: currentLocation.coordinate)
-
-        // Логируем текущие координаты
-        print("Received location update: \(newCoordinates)")
-
-        // Обновляем координаты, если они отличаются от текущих
+        
+        // Добавляем проверку, чтобы избежать установки одинаковых координат
         if _coordinates != newCoordinates {
             print("Location updated: \(_coordinates) -> \(newCoordinates)")
             coordinates = newCoordinates
@@ -102,29 +95,13 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
     }
 
     private func updateAddress() {
-        // Логирование координат перед геокодированием
         print("Updating address for coordinates: \(coordinates)")
-
-        // Пропускаем обновление, если координаты равны по умолчанию
-        if _coordinates.latitude == 48.856788 && _coordinates.longitude == 2.351077 {
-            print("Skipping address update for default coordinates")
-            return
-        }
-
-        // Геокодируем координаты для получения адреса
-        geocoder.reverseGeocodeLocation(coordinates.clLocation) { [weak self] placemarks, error in
-            if let error = error {
-                print("Error in geocoding: \(error.localizedDescription)")
-                self?.address = "Failed to fetch address"
-                return
-            }
-
+        geocoder.reverseGeocodeLocation(coordinates.clLocation) { [weak self] placemarks, _ in
             guard let placemark = placemarks?.first else {
                 print("No address found for coordinates: \(self?.coordinates ?? Coordinates(latitude: 0, longitude: 0))")
-                self?.address = "No data"
                 return
             }
-
+            
             let currentAddress = [
                 placemark.subThoroughfare,
                 placemark.thoroughfare,
@@ -132,7 +109,7 @@ class LocationViewModel: NSObject, CLLocationManagerDelegate {
                 placemark.administrativeArea,
                 placemark.country
             ].compactMap { $0 }.joined(separator: ", ")
-
+            
             self?.address = currentAddress.isEmpty ? "No data" : currentAddress
             print("Updated address: \(self?.address ?? "No data")")
         }
