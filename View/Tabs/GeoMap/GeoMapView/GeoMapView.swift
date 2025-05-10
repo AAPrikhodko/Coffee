@@ -9,49 +9,73 @@ import SwiftUI
 import MapKit
 
 struct GeoMapView: View {
-    let records: [Record]
+    let clusters: [Cluster]
 
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
         span: MKCoordinateSpan(latitudeDelta: 60, longitudeDelta: 60)
     )
 
-    private var annotationRecords: [Record] {
-        records.compactMap {
-            guard let coords = $0.place.coordinates,
-                  coords.latitude != 0,
-                  coords.longitude != 0
-            else { return nil }
-            return $0
-        }
-    }
+    @State private var selectedCluster: Cluster?
 
     var body: some View {
-        Map(coordinateRegion: $region, annotationItems: annotationRecords) { record in
-            MapAnnotation(coordinate: record.place.coordinates!.asCLLocationCoordinate2D) {
-                VStack(spacing: 4) {
-                    Image(systemName: "cup.and.saucer.fill")
-                        .foregroundColor(.brown)
-                    Text(record.drinkType.displayName)
-                        .font(.caption2)
-                        .padding(4)
-                        .background(Color.white.opacity(0.8))
-                        .cornerRadius(4)
+        ZStack {
+            Map(coordinateRegion: $region, annotationItems: clusters) { cluster in
+                MapAnnotation(coordinate: cluster.coordinate) {
+                    Button {
+                        selectedCluster = cluster
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text("\(cluster.records.count) ☕")
+                                .font(.caption2)
+                                .padding(6)
+                                .background(Color.white)
+                                .clipShape(Capsule())
+                                .shadow(radius: 2)
+                        }
+                    }
+                }
+            }
+            .ignoresSafeArea()
+            .onAppear {
+                zoomToFitAllClusters()
+            }
+
+            if let cluster = selectedCluster {
+                BottomSheet {
+                    VStack(alignment: .leading) {
+                        HStack {
+                            Text("\(cluster.records.count) record(s)")
+                                .font(.headline)
+                            Spacer()
+                            Button("Close") {
+                                selectedCluster = nil
+                            }
+                        }
+
+                        Divider()
+
+                        ScrollView {
+                            ForEach(cluster.records) { record in
+                                RecordRowView(record: record,
+                                              onEdit: { /* handle editing */ },
+                                              onDelete: { /* handle deletion */ })
+                                    .padding(.vertical, 4)
+                            }
+                        }
+                    }
+                    .padding()
                 }
             }
         }
-        .ignoresSafeArea()
-        .onAppear {
-            zoomToFitAllAnnotations()
-        }
     }
 
-    private func zoomToFitAllAnnotations() {
-        guard !annotationRecords.isEmpty else { return }
+    private func zoomToFitAllClusters() {
+        guard !clusters.isEmpty else { return }
 
-        let coordinates = annotationRecords.compactMap { $0.place.coordinates?.asCLLocationCoordinate2D }
-        let latitudes = coordinates.map { $0.latitude }
-        let longitudes = coordinates.map { $0.longitude }
+        let coordinates = clusters.map(\.coordinate)
+        let latitudes = coordinates.map(\.latitude)
+        let longitudes = coordinates.map(\.longitude)
 
         let minLat = latitudes.min() ?? 0
         let maxLat = latitudes.max() ?? 0
@@ -69,6 +93,33 @@ struct GeoMapView: View {
         )
 
         region = MKCoordinateRegion(center: center, span: span)
+    }
+}
+
+struct BottomSheet<Content: View>: View {
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack {
+            Spacer()
+            VStack {
+                Capsule()
+                    .frame(width: 40, height: 6)
+                    .foregroundColor(.gray.opacity(0.4))
+                    .padding(.top, 8)
+
+                content
+            }
+            .background(.ultraThinMaterial)
+            .cornerRadius(16)
+            .transition(.move(edge: .bottom))
+        }
+        .edgesIgnoringSafeArea(.bottom)
+        .animation(.easeInOut, value: UUID()) // For smoother appearance
     }
 }
 

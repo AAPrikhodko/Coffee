@@ -9,33 +9,38 @@ import SwiftUI
 
 struct GeoMapTabView: View {
     @Environment(RecordsViewModel.self) private var recordsViewModel
-    @State private var selectedRange: GeoTimeRange = .last30Days
+    @State private var selectedRange: GeoTimeRange = .last30
 
     private var filteredRecords: [Record] {
         recordsViewModel.records.filter { selectedRange.includes($0.date) }
     }
 
-    var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 0) {
-                // 🔹 Picker
-                Picker("Range", selection: $selectedRange) {
-                    ForEach(GeoTimeRange.allCases) { range in
-                        Text(range.rawValue).tag(range)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding()
+    private var clusters: [Cluster] {
+        Dictionary(grouping: filteredRecords) { record in
+            record.place.coordinates?.roundedToGrid(precision: 0.0005)
+        }
+        .compactMap { key, records in
+            guard let key else { return nil }
+            return Cluster(coordinate: key.asCLLocationCoordinate2D, records: records)
+        }
+    }
 
-                // 🔹 Full-height map (excluding safe area bottom)
-                GeoMapView(records: filteredRecords)
-                    .frame(height: geometry.size.height - 80) // 80 — примерная высота таб-бара и пикера
-                    .clipShape(RoundedRectangle(cornerRadius: 0))
+    var body: some View {
+        VStack(spacing: 12) {
+            Picker("Range", selection: $selectedRange) {
+                ForEach(GeoTimeRange.allCases) { range in
+                    Text(range.rawValue).tag(range)
+                }
             }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+
+            GeoMapView(clusters: clusters)
         }
         .navigationTitle("Geo Map")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+
 
 
