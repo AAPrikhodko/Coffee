@@ -17,22 +17,23 @@ struct GeoMapView: View {
     )
 
     @State private var selectedCluster: RecordClusterWrapper?
+    @State private var recordClusters: [RecordClusterWrapper] = []
+    @State private var lastDelta: Double = 0 // Начальное значение
 
     var body: some View {
         Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
-            MapAnnotation(coordinate: cluster.coordinate!) {
+            MapAnnotation(coordinate: cluster.coordinate) {
                 Button {
                     selectedCluster = cluster
                 } label: {
-                    VStack(spacing: 4) {
-                        Text("☕ \(cluster.records.count)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .padding(6)
-                            .background(Color.white.opacity(0.9))
-                            .clipShape(Capsule())
-                    }
+                    Text("☕ \(cluster.records.count)")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .padding(6)
+                        .background(Color.white.opacity(0.9))
+                        .clipShape(Capsule())
                 }
+                .id(cluster.id)
             }
         }
         .sheet(item: $selectedCluster) { cluster in
@@ -40,17 +41,23 @@ struct GeoMapView: View {
         }
         .onAppear {
             zoomToFit()
+            recordClusters = computeClusters()
+            lastDelta = region.span.latitudeDelta
+        }
+        .onChange(of: region.span.latitudeDelta) { newDelta in
+            if abs(newDelta - lastDelta) > 0.01 {
+                lastDelta = newDelta
+                recordClusters = computeClusters()
+            }
         }
     }
 
-    private var recordClusters: [RecordClusterWrapper] {
+    private func computeClusters() -> [RecordClusterWrapper] {
         let grouped = Dictionary(grouping: records.filter { $0.place.coordinates != nil }) { record in
             record.place.coordinates!.rounded(for: region.span)
         }
 
-        return grouped
-            .map { RecordClusterWrapper(records: $0.value) }
-            .filter { $0.coordinate != nil } // ← Удаляем пустые координаты
+        return grouped.map { RecordClusterWrapper(records: $0.value) }
     }
 
     private func zoomToFit() {
@@ -77,13 +84,10 @@ struct RecordClusterWrapper: Identifiable, Equatable {
     let id = UUID()
     let records: [Record]
 
-    var coordinate: CLLocationCoordinate2D? {
+    var coordinate: CLLocationCoordinate2D {
         let coords = records.compactMap { $0.place.coordinates?.asCLLocationCoordinate2D }
-        guard !coords.isEmpty else { return nil }
-
         let avgLat = coords.map(\.latitude).reduce(0, +) / Double(coords.count)
         let avgLon = coords.map(\.longitude).reduce(0, +) / Double(coords.count)
-
         return CLLocationCoordinate2D(latitude: avgLat, longitude: avgLon)
     }
 
@@ -94,16 +98,14 @@ struct RecordClusterWrapper: Identifiable, Equatable {
 
 extension Coordinates {
     func rounded(for span: MKCoordinateSpan) -> Coordinates {
+        let clampedDelta = max(min(span.latitudeDelta, 10), 0.001)
         let precision: Double
 
-        if span.latitudeDelta < 0.1 {
-            precision = 0.001
-        } else if span.latitudeDelta < 1 {
-            precision = 0.01
-        } else if span.latitudeDelta < 10 {
-            precision = 0.1
-        } else {
-            precision = 1.0
+        switch clampedDelta {
+        case ..<0.1: precision = 0.001
+        case ..<1: precision = 0.01
+        case ..<10: precision = 0.1
+        default: precision = 1.0
         }
 
         return Coordinates(
@@ -112,7 +114,6 @@ extension Coordinates {
         )
     }
 }
-
 
 struct ClusterDetailSheet: View {
     let records: [Record]
