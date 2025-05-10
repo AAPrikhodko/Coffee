@@ -40,7 +40,6 @@ struct GeoMapView: View {
                 .id(cluster.id)
             }
         }
-        .ignoresSafeArea()
         .sheet(item: $selectedRecordForEdit) { record in
             AddRecordView(
                 isSheetShown: .constant(false),
@@ -142,6 +141,8 @@ struct ClusterDetailSheet: View {
     var onEdit: (Record) -> Void
 
     var body: some View {
+        Spacer(minLength: 12)
+        
         List(records) { record in
             RecordRowView(
                 record: record,
