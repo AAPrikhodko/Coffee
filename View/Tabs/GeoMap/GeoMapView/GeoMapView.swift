@@ -4,21 +4,25 @@
 //
 //  Created by Andrei on 10.05.2025.
 //
-
-import SwiftUI
 import MapKit
+import SwiftUI
+
 
 struct GeoMapView: View {
-    let records: [Record]
+    @Environment(AuthViewModel.self) private var authViewModel
+    @Environment(RecordsViewModel.self) private var recordsViewModel
+
+    @State private var selectedRecordForEdit: Record?
+    @State private var selectedCluster: RecordClusterWrapper?
 
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
         span: MKCoordinateSpan(latitudeDelta: 60, longitudeDelta: 60)
     )
-
-    @State private var selectedCluster: RecordClusterWrapper?
     @State private var recordClusters: [RecordClusterWrapper] = []
-    @State private var lastDelta: Double = 0 // Начальное значение
+    @State private var lastDelta: Double = 0
+
+    let records: [Record]
 
     var body: some View {
         Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
@@ -36,8 +40,27 @@ struct GeoMapView: View {
                 .id(cluster.id)
             }
         }
+        .ignoresSafeArea()
+        .sheet(item: $selectedRecordForEdit) { record in
+            AddRecordView(
+                isSheetShown: .constant(false),
+                authViewModel: authViewModel,
+                recordsViewModel: recordsViewModel,
+                editingRecord: record
+            )
+        }
         .sheet(item: $selectedCluster) { cluster in
-            ClusterDetailSheet(records: cluster.records)
+            ClusterDetailSheet(
+                records: cluster.records,
+                onEdit: { record in
+                    selectedCluster = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        selectedRecordForEdit = record
+                    }
+                }
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
         .onAppear {
             zoomToFit()
@@ -56,7 +79,6 @@ struct GeoMapView: View {
         let grouped = Dictionary(grouping: records.filter { $0.place.coordinates != nil }) { record in
             record.place.coordinates!.rounded(for: region.span)
         }
-
         return grouped.map { RecordClusterWrapper(records: $0.value) }
     }
 
@@ -117,14 +139,19 @@ extension Coordinates {
 
 struct ClusterDetailSheet: View {
     let records: [Record]
+    var onEdit: (Record) -> Void
 
     var body: some View {
-        NavigationStack {
-            List(records) { record in
-                RecordRowView(record: record)
-            }
-            .navigationTitle("Records (\(records.count))")
+        List(records) { record in
+            RecordRowView(
+                record: record,
+                onEdit: { onEdit(record) },
+                onDelete: {
+                    // Optional: handle deletion
+                }
+            )
         }
+        .listStyle(.plain)
     }
 }
 
