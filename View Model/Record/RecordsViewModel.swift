@@ -213,26 +213,26 @@ class RecordsViewModel {
         return totalRecords
     }
     
-    func recordsGroupedByLocation(precision: Int = 3) -> [Cluster] {
-        let factor = pow(10.0, Double(precision))
-
-        var grouped: [String: [Record]] = [:]
-
-        for record in records {
-            guard let coords = record.place.coordinates else { continue }
-            let lat = round(coords.latitude * factor) / factor
-            let lon = round(coords.longitude * factor) / factor
-            let key = "\(lat)-\(lon)"
-            grouped[key, default: []].append(record)
-        }
-
-        return grouped.map { key, records in
-            guard let first = records.first?.place.coordinates else {
-                return Cluster(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0), records: records)
-            }
-            return Cluster(coordinate: CLLocationCoordinate2D(latitude: first.latitude, longitude: first.longitude), records: records)
-        }
-    }
+//    func recordsGroupedByLocation(precision: Int = 3) -> [Cluster] {
+//        let factor = pow(10.0, Double(precision))
+//
+//        var grouped: [String: [Record]] = [:]
+//
+//        for record in records {
+//            guard let coords = record.place.coordinates else { continue }
+//            let lat = round(coords.latitude * factor) / factor
+//            let lon = round(coords.longitude * factor) / factor
+//            let key = "\(lat)-\(lon)"
+//            grouped[key, default: []].append(record)
+//        }
+//
+//        return grouped.map { key, records in
+//            guard let first = records.first?.place.coordinates else {
+//                return Cluster(coordinate: CLLocationCoordinate2D(latitude: 0, longitude: 0), records: records)
+//            }
+//            return Cluster(coordinate: CLLocationCoordinate2D(latitude: first.latitude, longitude: first.longitude), records: records)
+//        }
+//    }
 
 
     

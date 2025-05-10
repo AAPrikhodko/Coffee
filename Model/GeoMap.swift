@@ -8,22 +8,41 @@
 import Foundation
 
 enum GeoTimeRange: String, CaseIterable, Identifiable {
-    case last30 = "30d"
-    case last365 = "1y"
-    case allTime = "All"
+    case last30
+    case lastYear
+    case allTime
 
     var id: String { rawValue }
 
-    func includes(_ date: Date) -> Bool {
-        let now = Date()
+    var label: String {
         switch self {
         case .last30:
-            return date >= Calendar.current.date(byAdding: .day, value: -30, to: now)!
-        case .last365:
-            return date >= Calendar.current.date(byAdding: .day, value: -365, to: now)!
+            return "30 days"
+        case .lastYear:
+            return "1 year"
+        case .allTime:
+            return "All time"
+        }
+    }
+
+    func includes(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+
+        switch self {
+        case .last30:
+            if let pastDate = calendar.date(byAdding: .day, value: -30, to: now) {
+                return date >= pastDate
+            }
+        case .lastYear:
+            if let pastDate = calendar.date(byAdding: .year, value: -1, to: now) {
+                return date >= pastDate
+            }
         case .allTime:
             return true
         }
+
+        return false
     }
 }
 

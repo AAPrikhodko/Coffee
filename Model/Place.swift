@@ -17,9 +17,3 @@ struct Place: Identifiable, Hashable, Codable {
     var address: String
     var type: PlaceType
 }
-
-struct Cluster: Identifiable {
-    let id = UUID()
-    let coordinate: CLLocationCoordinate2D
-    let records: [Record]
-}

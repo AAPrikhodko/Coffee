@@ -9,117 +9,121 @@ import SwiftUI
 import MapKit
 
 struct GeoMapView: View {
-    let clusters: [Cluster]
+    let records: [Record]
 
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
         span: MKCoordinateSpan(latitudeDelta: 60, longitudeDelta: 60)
     )
 
-    @State private var selectedCluster: Cluster?
+    @State private var selectedCluster: RecordClusterWrapper?
 
     var body: some View {
-        ZStack {
-            Map(coordinateRegion: $region, annotationItems: clusters) { cluster in
-                MapAnnotation(coordinate: cluster.coordinate) {
-                    Button {
-                        selectedCluster = cluster
-                    } label: {
-                        VStack(spacing: 4) {
-                            Text("\(cluster.records.count) ☕")
-                                .font(.caption2)
-                                .padding(6)
-                                .background(Color.white)
-                                .clipShape(Capsule())
-                                .shadow(radius: 2)
-                        }
+        Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
+            MapAnnotation(coordinate: cluster.coordinate!) {
+                Button {
+                    selectedCluster = cluster
+                } label: {
+                    VStack(spacing: 4) {
+                        Text("☕ \(cluster.records.count)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .padding(6)
+                            .background(Color.white.opacity(0.9))
+                            .clipShape(Capsule())
                     }
-                }
-            }
-            .ignoresSafeArea()
-            .onAppear {
-                zoomToFitAllClusters()
-            }
-
-            if let cluster = selectedCluster {
-                BottomSheet {
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text("\(cluster.records.count) record(s)")
-                                .font(.headline)
-                            Spacer()
-                            Button("Close") {
-                                selectedCluster = nil
-                            }
-                        }
-
-                        Divider()
-
-                        ScrollView {
-                            ForEach(cluster.records) { record in
-                                RecordRowView(record: record,
-                                              onEdit: { /* handle editing */ },
-                                              onDelete: { /* handle deletion */ })
-                                    .padding(.vertical, 4)
-                            }
-                        }
-                    }
-                    .padding()
                 }
             }
         }
+        .sheet(item: $selectedCluster) { cluster in
+            ClusterDetailSheet(records: cluster.records)
+        }
+        .onAppear {
+            zoomToFit()
+        }
     }
 
-    private func zoomToFitAllClusters() {
-        guard !clusters.isEmpty else { return }
+    private var recordClusters: [RecordClusterWrapper] {
+        let grouped = Dictionary(grouping: records.filter { $0.place.coordinates != nil }) { record in
+            record.place.coordinates!.rounded(for: region.span)
+        }
 
-        let coordinates = clusters.map(\.coordinate)
-        let latitudes = coordinates.map(\.latitude)
-        let longitudes = coordinates.map(\.longitude)
+        return grouped
+            .map { RecordClusterWrapper(records: $0.value) }
+            .filter { $0.coordinate != nil } // ← Удаляем пустые координаты
+    }
 
-        let minLat = latitudes.min() ?? 0
-        let maxLat = latitudes.max() ?? 0
-        let minLon = longitudes.min() ?? 0
-        let maxLon = longitudes.max() ?? 0
+    private func zoomToFit() {
+        guard !records.isEmpty else { return }
+
+        let coords = records.compactMap { $0.place.coordinates?.asCLLocationCoordinate2D }
+        let latitudes = coords.map(\.latitude)
+        let longitudes = coords.map(\.longitude)
 
         let center = CLLocationCoordinate2D(
-            latitude: (minLat + maxLat) / 2,
-            longitude: (minLon + maxLon) / 2
+            latitude: (latitudes.min()! + latitudes.max()!) / 2,
+            longitude: (longitudes.min()! + longitudes.max()!) / 2
         )
-
         let span = MKCoordinateSpan(
-            latitudeDelta: max(maxLat - minLat, 1.0) * 1.5,
-            longitudeDelta: max(maxLon - minLon, 1.0) * 1.5
+            latitudeDelta: max(latitudes.max()! - latitudes.min()!, 0.05) * 1.5,
+            longitudeDelta: max(longitudes.max()! - longitudes.min()!, 0.05) * 1.5
         )
 
         region = MKCoordinateRegion(center: center, span: span)
     }
 }
 
-struct BottomSheet<Content: View>: View {
-    let content: Content
+struct RecordClusterWrapper: Identifiable, Equatable {
+    let id = UUID()
+    let records: [Record]
 
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
+    var coordinate: CLLocationCoordinate2D? {
+        let coords = records.compactMap { $0.place.coordinates?.asCLLocationCoordinate2D }
+        guard !coords.isEmpty else { return nil }
+
+        let avgLat = coords.map(\.latitude).reduce(0, +) / Double(coords.count)
+        let avgLon = coords.map(\.longitude).reduce(0, +) / Double(coords.count)
+
+        return CLLocationCoordinate2D(latitude: avgLat, longitude: avgLon)
     }
 
-    var body: some View {
-        VStack {
-            Spacer()
-            VStack {
-                Capsule()
-                    .frame(width: 40, height: 6)
-                    .foregroundColor(.gray.opacity(0.4))
-                    .padding(.top, 8)
+    static func == (lhs: RecordClusterWrapper, rhs: RecordClusterWrapper) -> Bool {
+        lhs.records.map(\.id) == rhs.records.map(\.id)
+    }
+}
 
-                content
-            }
-            .background(.ultraThinMaterial)
-            .cornerRadius(16)
-            .transition(.move(edge: .bottom))
+extension Coordinates {
+    func rounded(for span: MKCoordinateSpan) -> Coordinates {
+        let precision: Double
+
+        if span.latitudeDelta < 0.1 {
+            precision = 0.001
+        } else if span.latitudeDelta < 1 {
+            precision = 0.01
+        } else if span.latitudeDelta < 10 {
+            precision = 0.1
+        } else {
+            precision = 1.0
         }
-        .edgesIgnoringSafeArea(.bottom)
-        .animation(.easeInOut, value: UUID()) // For smoother appearance
+
+        return Coordinates(
+            latitude: (latitude / precision).rounded() * precision,
+            longitude: (longitude / precision).rounded() * precision
+        )
+    }
+}
+
+
+struct ClusterDetailSheet: View {
+    let records: [Record]
+
+    var body: some View {
+        NavigationStack {
+            List(records) { record in
+                RecordRowView(record: record)
+            }
+            .navigationTitle("Records (\(records.count))")
+        }
     }
 }
 
