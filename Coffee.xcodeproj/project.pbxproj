@@ -51,6 +51,7 @@
 				DrinkSize.swift,
 				DrinkType.swift,
 				EquatableCoordinateRegion.swift,
+				GeoMap.swift,
 				HomeTab.swift,
 				Place.swift,
 				PlaceType.swift,
@@ -87,6 +88,8 @@
 				Tabs/Calendar/CalendarMonthGrid/CalendarMonthGridView.swift,
 				Tabs/Calendar/CalendarTabView.swift,
 				Tabs/Calendar/RecordRow/RecordRowView.swift,
+				Tabs/GeoMap/GeoMapTabView.swift,
+				Tabs/GeoMap/GeoMapView/GeoMapView.swift,
 				Tabs/Home/HomeTabView.swift,
 				Tabs/Home/ProfilePreview/Profile/ProfileView.swift,
 				Tabs/Home/ProfilePreview/ProfilePreviewView.swift,
@@ -101,7 +104,6 @@
 				Tabs/Home/Stats/ByQuantity/PreviewStatByQuantityView.swift,
 				Tabs/Home/Stats/ByQuantity/StatByQuantityView.swift,
 				Tabs/Home/Stats/ByQuantity/WeeklyRecordsChartView.swift,
-				Tabs/MyMap/MyMapTabView.swift,
 				Tabs/Settings/SettingsTabView.swift,
 			);
 			target = 75DA51AF2D44FB5F00840578 /* Coffee */;

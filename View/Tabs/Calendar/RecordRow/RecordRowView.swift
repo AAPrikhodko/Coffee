@@ -6,13 +6,15 @@
 //
 
 import SwiftUICore
+import SwiftUI
 
 struct RecordRowView: View {
     let record: Record
+    var onEdit: () -> Void = {}
+    var onDelete: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 12) {
-            // Иконка напитка
             Image(record.drinkType.imageName)
                 .resizable()
                 .scaledToFit()
@@ -23,13 +25,10 @@ struct RecordRowView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(record.drinkType.displayName)
                     .font(.headline)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
 
                 Text(shortPlaceDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
             }
 
             Spacer()
@@ -38,6 +37,16 @@ struct RecordRowView: View {
                 .font(.subheadline)
         }
         .padding(.vertical, 6)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive, action: onDelete) {
+                Label("Delete", systemImage: "trash")
+            }
+
+            Button(action: onEdit) {
+                Label("Edit", systemImage: "pencil")
+            }
+            .tint(.blue)
+        }
     }
 
     var formattedPrice: String {
@@ -52,8 +61,8 @@ struct RecordRowView: View {
         let components = record.place.address
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
-
         return components.suffix(2).joined(separator: ", ")
     }
 }
+
 

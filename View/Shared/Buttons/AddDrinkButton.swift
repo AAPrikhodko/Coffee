@@ -8,23 +8,26 @@
 import SwiftUI
 
 struct AddDrinkButton: View {
-    @Binding var showAddDrinkSheet: Bool
-    
+    @Binding var showSheet: Bool
+    var title: String = "Add drink"
+    var width: CGFloat = 360
+    var height: CGFloat = 48
+
     var body: some View {
         Button {
-            showAddDrinkSheet.toggle()
+            showSheet.toggle()
         } label: {
-            Text("Add drink")
+            Text(title)
                 .foregroundStyle(.white)
                 .font(.subheadline)
                 .fontWeight(.semibold)
-                .frame(width: 360, height: 48)
+                .frame(width: width, height: height)
                 .background(.pink)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
 
-#Preview {
-    AddDrinkButton(showAddDrinkSheet: .constant(false))
-}
+//#Preview {
+//    AddDrinkButton(showAddDrinkSheet: .constant(false))
+//}

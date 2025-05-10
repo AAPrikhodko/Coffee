@@ -10,27 +10,28 @@ import SwiftUI
 struct ContentView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @State private var recordsViewModel: RecordsViewModel?
-    
+
     var body: some View {
         Group {
             if let recordsViewModel {
                 TabView {
                     Tab("Home", systemImage: "house") {
-                        HomeTabView().environment(recordsViewModel)
+                        HomeTabView()
                     }
-                    
+
                     Tab("Calendar", systemImage: "calendar") {
-                        CalendarTabView().environment(recordsViewModel)
+                        CalendarTabView()
                     }
-                    
-                    Tab("My Map", systemImage: "map") {
-                        MyMapTabView()
+
+                    Tab("Geo Map", systemImage: "map") {
+                        GeoMapTabView()
                     }
-                    
+
                     Tab("Settings", systemImage: "gearshape") {
                         SettingsTabView()
                     }
                 }
+                .environment(recordsViewModel)
             } else {
                 ProgressView("Loading...")
             }
@@ -38,11 +39,11 @@ struct ContentView: View {
         .onAppear {
             updateRecordsViewModelIfNeeded()
         }
-        .onChange(of: authViewModel.currentUser) { oldUser, newUser in
+        .onChange(of: authViewModel.currentUser) { _, _ in
             updateRecordsViewModelIfNeeded()
         }
     }
-    
+
     private func updateRecordsViewModelIfNeeded() {
         guard let user = authViewModel.currentUser else {
             recordsViewModel = nil
@@ -58,6 +59,7 @@ struct ContentView: View {
         }
     }
 }
+
 
 #Preview {
     ContentView()

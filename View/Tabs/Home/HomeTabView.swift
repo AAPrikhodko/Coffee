@@ -49,7 +49,7 @@ struct HomeTabView: View {
             }
             
             
-            AddDrinkButton(showAddDrinkSheet: $showAddDrinkSheet)
+            AddDrinkButton(showSheet: $showAddDrinkSheet)
                 .padding(.bottom, 30)
                 .fullScreenCover(isPresented: $showAddDrinkSheet) {
                     AddRecordView(

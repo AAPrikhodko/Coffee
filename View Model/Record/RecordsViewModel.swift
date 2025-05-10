@@ -228,6 +228,21 @@ class RecordsViewModel {
         self.records.append(record)
     }
     
+    func deleteRecord(_ record: Record) async throws {
+        try await recordRepository.deleteRecord(record.id)
+        if let index = records.firstIndex(where: { $0.id == record.id }) {
+            records.remove(at: index)
+        }
+    }
+    
+    func updateRecord(_ updated: Record) async throws {
+        try await recordRepository.updateRecord(updated)
+
+        if let index = records.firstIndex(where: { $0.id == updated.id }) {
+            records[index] = updated
+        }
+    }
+    
     func reset(for newUserId: UUID) {
         self.userId = newUserId
         Task {

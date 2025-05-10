@@ -9,9 +9,15 @@ import SwiftUI
 
 struct CalendarTabView: View {
     @Environment(RecordsViewModel.self) var recordsViewModel
+    @Environment(AuthViewModel.self) var authViewModel
 
     @State private var selectedDate: Date? = nil
     @State private var currentMonth: Date = Date()
+    @State private var selectedRecord: Record? = nil
+    @State private var isEditingSheetShown = false
+    @State private var showDeleteConfirmation = false
+    @State private var recordToDelete: Record? = nil
+    @State private var showAddRecordSheet = false
 
     private let calendar = Calendar.current
 
@@ -82,21 +88,63 @@ struct CalendarTabView: View {
                     }
                 )
 
-                // 🔹 Records
+                // 🔹 Records list
                 if visibleRecords.isEmpty {
                     ContentUnavailableView("No records", systemImage: "calendar.badge.exclamation")
                 } else {
                     List(visibleRecords) { record in
-                        NavigationLink {
-//                            AddRecordView(editingRecord: record) // будем реализовывать
-                        } label: {
-                            RecordRowView(record: record)
-                        }
+                        RecordRowView(
+                            record: record,
+                            onEdit: {
+                                selectedRecord = record
+                                isEditingSheetShown = true
+                            },
+                            onDelete: {
+                                recordToDelete = record
+                                showDeleteConfirmation = true
+                            }
+                        )
                     }
+                    .listStyle(.plain)
                 }
+
+                // 🔹 Add Record Button
+                AddDrinkButton(
+                    showSheet: $showAddRecordSheet
+                )
+                .padding(.bottom, 10)
+                .padding(.leading, 6)
             }
             .padding()
             .navigationTitle("Calendar")
+            .sheet(isPresented: $isEditingSheetShown) {
+                if let record = selectedRecord {
+                    AddRecordView(
+                        isSheetShown: $isEditingSheetShown,
+                        authViewModel: authViewModel,
+                        recordsViewModel: recordsViewModel,
+                        editingRecord: record
+                    )
+                }
+            }
+            .sheet(isPresented: $showAddRecordSheet) {
+                AddRecordView(
+                    isSheetShown: $showAddRecordSheet,
+                    authViewModel: authViewModel,
+                    recordsViewModel: recordsViewModel,
+                    defaultDate: selectedDate ?? Date()
+                )
+            }
+            .alert("Delete record?", isPresented: $showDeleteConfirmation, presenting: recordToDelete) { record in
+                Button("Delete", role: .destructive) {
+                    Task {
+                        try? await recordsViewModel.deleteRecord(record)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { _ in
+                Text("This action cannot be undone.")
+            }
         }
     }
 
@@ -106,6 +154,8 @@ struct CalendarTabView: View {
         return formatter
     }
 }
+
+
 
 #Preview {
     CalendarTabView()

@@ -151,58 +151,79 @@
 //}
 
 import Foundation
-import FirebaseAuth
-import FirebaseFirestore
 import CoreLocation
 import MapKit
 import SwiftUI
 
 @Observable
 class NewRecordViewModel: ObservableObject {
-    var drinkType: DrinkType = .americano
-    var drinkSize: DrinkSize = .ml250
-    var price: Double = 0
-    var currency: Currency = .usd
-    var date: Date = Date()
-//    var place: Place = Place(
-//        id: UUID(),
-//        coordinates: Coordinates(latitude: 0, longitude: 0),
-//        address: "",
-//        type: .cafe
-//    )
-    var placeType: PlaceType = .cafe
-    
+    var drinkType: DrinkType
+    var drinkSize: DrinkSize
+    var price: Double
+    var currency: Currency
+    var date: Date
+    var placeType: PlaceType
+    var existingRecordId: UUID?
+    var existingPlaceId: UUID?
+
     var isSaving: Bool = false
     var errorMessage: String?
-    
+
     private let authViewModel: AuthViewModel
     private let recordsViewModel: RecordsViewModel
 
-    init(authViewModel: AuthViewModel, recordsViewModel: RecordsViewModel) {
+    // MARK: - Инициализация
+    init(
+        authViewModel: AuthViewModel,
+        recordsViewModel: RecordsViewModel,
+        editingRecord: Record? = nil,
+        defaultDate: Date = Date()
+    ) {
         self.authViewModel = authViewModel
         self.recordsViewModel = recordsViewModel
+
+        if let record = editingRecord {
+            self.existingRecordId = record.id
+            self.existingPlaceId = record.place.id
+            self.drinkType = record.drinkType
+            self.drinkSize = record.drinkSize
+            self.price = record.price
+            self.currency = record.currency
+            self.date = record.date
+            self.placeType = record.place.type
+        } else {
+            self.drinkType = .americano
+            self.drinkSize = .ml250
+            self.price = 0
+            self.currency = .usd
+            self.date = defaultDate
+            self.placeType = .cafe
+        }
     }
 
+    // MARK: - Сохранение
     func save(locationViewModel: LocationViewModel) async -> Bool {
         guard let user = authViewModel.currentUser else {
-            errorMessage = "Пользователь не найден"
+            errorMessage = "User not found"
             return false
         }
 
-        let newRecord = Record(
-            id: UUID(),
+        let place = Place(
+            id: existingPlaceId ?? UUID(),
+            coordinates: locationViewModel.coordinates,
+            address: locationViewModel.address,
+            type: placeType
+        )
+
+        let record = Record(
+            id: existingRecordId ?? UUID(),
             userId: user.id.uuidString,
             drinkType: drinkType,
             drinkSize: drinkSize,
             price: price,
             currency: currency,
             date: date,
-            place: Place(
-                id: UUID(),
-                coordinates: locationViewModel.coordinates,
-                address: locationViewModel.address,
-                type: placeType
-            )
+            place: place
         )
 
         isSaving = true
@@ -210,30 +231,17 @@ class NewRecordViewModel: ObservableObject {
         defer { isSaving = false }
 
         do {
-            try await recordsViewModel.addRecord(newRecord)
+            if existingRecordId != nil {
+                try await recordsViewModel.updateRecord(record)
+            } else {
+                try await recordsViewModel.addRecord(record)
+            }
             return true
         } catch {
-            errorMessage = "Ошибка при сохранении: \(error.localizedDescription)"
+            errorMessage = "Failed to save: \(error.localizedDescription)"
             return false
         }
     }
-
-//    func updateCoordinates(_ coordinates: Coordinates) {
-//        place.coordinates = coordinates
-//    }
-//
-//    func updateAddressByLocation(_ location: CLLocation) {
-//        CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
-//            DispatchQueue.main.async {
-//                if let placemark = placemarks?.first {
-//                    let street = placemark.thoroughfare ?? "Street"
-//                    let city = placemark.locality ?? "City"
-//                    let country = placemark.country ?? "Country"
-//                    self.place.address = "\(street), \(city), \(country)"
-//                } else {
-//                    self.place.address = "Unknown address"
-//                }
-//            }
-//        }
-//    }
 }
+
+

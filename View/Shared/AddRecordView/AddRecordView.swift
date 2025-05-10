@@ -13,25 +13,30 @@ struct AddRecordView: View {
 
     @State private var newRecordViewModel: NewRecordViewModel
     @State private var locationViewModel = LocationViewModel()
-//    @State private var locationPickerViewModel = LocationPickerViewModel()
     @State private var navigationPath: [NewRecordRoute] = []
     @State private var isEditingPrice = false
     @FocusState private var isPriceFieldFocused: Bool
+    
+    private let editingRecord: Record?
 
     init(
         isSheetShown: Binding<Bool>,
         authViewModel: AuthViewModel,
-        recordsViewModel: RecordsViewModel
+        recordsViewModel: RecordsViewModel,
+        editingRecord: Record? = nil,
+        defaultDate: Date = Date()
     ) {
         self._isSheetShown = isSheetShown
+        self.editingRecord = editingRecord
         self._newRecordViewModel = State(
             initialValue: NewRecordViewModel(
                 authViewModel: authViewModel,
-                recordsViewModel: recordsViewModel
+                recordsViewModel: recordsViewModel,
+                editingRecord: editingRecord,
+                defaultDate: defaultDate
             )
         )
     }
-    
     
     
     var body: some View {
@@ -135,7 +140,7 @@ struct AddRecordView: View {
                     
                 }
             }
-            .navigationTitle("New Record")
+            .navigationTitle(editingRecord == nil ? "New Record" : "Edit Record")
             .navigationDestination(for: NewRecordRoute.self) {route in
                 switch (route) {
                 case .mapPicker:
@@ -162,7 +167,7 @@ struct AddRecordView: View {
                     if newRecordViewModel.isSaving {
                         ProgressView()
                     } else {
-                        Text("Add")
+                        Text(editingRecord == nil ? "Add" : "Save")
                     }
                 }
                 .disabled(newRecordViewModel.isSaving)
