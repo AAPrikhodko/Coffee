@@ -98,6 +98,7 @@
 				Tabs/GeoMap/GeoMapStatsOverlay/GeoMapStatsOverlay.swift,
 				Tabs/GeoMap/GeoMapTabView.swift,
 				Tabs/GeoMap/GeoMapView/GeoMapView.swift,
+				Tabs/GeoMap/GeoStatsDetail/GeoStatsDetailView.swift,
 				Tabs/Home/HomeTabView.swift,
 				Tabs/Home/ProfilePreview/Profile/ProfileView.swift,
 				Tabs/Home/ProfilePreview/ProfilePreviewView.swift,

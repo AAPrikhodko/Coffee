@@ -74,7 +74,7 @@ struct GeoMapView: View {
 
         // Sheet: полная статистика
         .sheet(isPresented: $showFullGeoStats) {
-//            GeoStatsDetailView(records: records)
+            GeoStatsDetailView()
         }
 
         .onAppear {
