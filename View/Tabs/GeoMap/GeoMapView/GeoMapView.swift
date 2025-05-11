@@ -7,13 +7,13 @@
 import MapKit
 import SwiftUI
 
-
 struct GeoMapView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @Environment(RecordsViewModel.self) private var recordsViewModel
 
     @State private var selectedRecordForEdit: Record?
     @State private var selectedCluster: RecordClusterWrapper?
+    @State private var showFullGeoStats = false
 
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -25,29 +25,30 @@ struct GeoMapView: View {
     let records: [Record]
 
     var body: some View {
-        Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
-            MapAnnotation(coordinate: cluster.coordinate) {
-                Button {
-                    selectedCluster = cluster
-                } label: {
-                    Text("☕ \(cluster.records.count)")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .padding(6)
-                        .background(Color.white.opacity(0.9))
-                        .clipShape(Capsule())
+        ZStack(alignment: .top) {
+            Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
+                MapAnnotation(coordinate: cluster.coordinate) {
+                    Button {
+                        selectedCluster = cluster
+                    } label: {
+                        Text("☕ \(cluster.records.count)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .padding(6)
+                            .background(Color.white.opacity(0.9))
+                            .clipShape(Capsule())
+                    }
+                    .id(cluster.id)
                 }
-                .id(cluster.id)
             }
+            
+            GeoMapStatsOverlay(records: records) {
+                showFullGeoStats = true
+            }
+            .padding(.top, 12)
         }
-        .sheet(item: $selectedRecordForEdit) { record in
-            AddRecordView(
-                isSheetShown: .constant(false),
-                authViewModel: authViewModel,
-                recordsViewModel: recordsViewModel,
-                editingRecord: record
-            )
-        }
+
+        // Sheet: список записей кластера
         .sheet(item: $selectedCluster) { cluster in
             ClusterDetailSheet(
                 records: cluster.records,
@@ -59,8 +60,23 @@ struct GeoMapView: View {
                 }
             )
             .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.visible)
         }
+
+        // Sheet: редактирование записи
+        .sheet(item: $selectedRecordForEdit) { record in
+            AddRecordView(
+                isSheetShown: .constant(false),
+                authViewModel: authViewModel,
+                recordsViewModel: recordsViewModel,
+                editingRecord: record
+            )
+        }
+
+        // Sheet: полная статистика
+        .sheet(isPresented: $showFullGeoStats) {
+//            GeoStatsDetailView(records: records)
+        }
+
         .onAppear {
             zoomToFit()
             recordClusters = computeClusters()
@@ -100,6 +116,7 @@ struct GeoMapView: View {
         region = MKCoordinateRegion(center: center, span: span)
     }
 }
+
 
 struct RecordClusterWrapper: Identifiable, Equatable {
     let id = UUID()

@@ -16,4 +16,14 @@ struct Place: Identifiable, Hashable, Codable {
     var coordinates: Coordinates?
     var address: String
     var type: PlaceType
+    
+    var cityName: String {
+        let components = address.split(separator: ",")
+        return components.dropLast().last.map(String.init) ?? "Unknown"
+    }
+
+    var countryCode: String? {
+        // Предположим, что страна — последнее слово в адресе
+        address.split(separator: ",").last.map { $0.trimmingCharacters(in: .whitespaces) }
+    }
 }
