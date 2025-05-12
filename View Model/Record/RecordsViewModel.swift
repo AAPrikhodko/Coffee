@@ -137,6 +137,65 @@ class RecordsViewModel {
         return totalRecords
     }
     
+    var availableCountries: [String] {
+        Set(records.compactMap { $0.place.countryCode }).sorted()
+    }
+
+    func cities(in country: String?) -> [String] {
+        let filtered = country == nil
+            ? records
+            : records.filter { $0.place.countryCode == country }
+        return Set(filtered.map { $0.place.cityName }).sorted()
+    }
+
+    func filteredRecords(country: String?, city: String?) -> [Record] {
+        records.filter { record in
+            let matchesCountry = country == nil || record.place.countryCode == country
+            let matchesCity = city == nil || record.place.cityName == city
+            return matchesCountry && matchesCity
+        }
+    }
+
+    // MARK: - Aggregated Geo Stats
+
+    struct GeoStats {
+        let totalCups: Int
+        let cityCount: Int
+        let countryCount: Int
+        let favoriteDrink: DrinkType?
+        let totalExpenses: Double
+        let averagePrice: Double
+        let mostExpensive: Record?
+        let cheapest: Record?
+    }
+
+    func geoStats(for records: [Record]) -> GeoStats {
+        let cups = records.count
+        let cities = Set(records.map { $0.place.cityName }).count
+        let countries = Set(records.map { $0.place.countryCode ?? "?" }).count
+
+        let drinkCounts = Dictionary(grouping: records, by: \.drinkType)
+            .mapValues { $0.count }
+        let favoriteDrink = drinkCounts.max { $0.value < $1.value }?.key
+
+        let totalSpent = records.map(\.price).reduce(0, +)
+        let averagePrice = records.isEmpty ? 0 : totalSpent / Double(records.count)
+
+        let mostExpensive = records.max { $0.price < $1.price }
+        let cheapest = records.min { $0.price < $1.price }
+
+        return GeoStats(
+            totalCups: cups,
+            cityCount: cities,
+            countryCount: countries,
+            favoriteDrink: favoriteDrink,
+            totalExpenses: totalSpent,
+            averagePrice: averagePrice,
+            mostExpensive: mostExpensive,
+            cheapest: cheapest
+        )
+    }
+    
     func loadRecords() async {
         do {
             let fetched = try await recordRepository.fetchRecords(for: userId)
