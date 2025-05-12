@@ -15,8 +15,8 @@ struct ContentView: View {
         Group {
             if let recordsViewModel {
                 TabView {
-                    Tab("Home", systemImage: "house") {
-                        HomeTabView()
+                    Tab("Charts", systemImage: "chart.bar") {
+                        ChartsTabView()
                     }
 
                     Tab("Calendar", systemImage: "calendar") {

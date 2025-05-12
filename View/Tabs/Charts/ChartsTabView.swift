@@ -1,5 +1,5 @@
 //
-//  HomeTabView.swift
+//  ChartsTabView.swift
 //  Coffee
 //
 //  Created by Andrei on 25.01.2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HomeTabView: View {
+struct ChartsTabView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @Environment(RecordsViewModel.self) private var recordsViewModel
     
@@ -63,5 +63,5 @@ struct HomeTabView: View {
 }
 
 #Preview {
-    HomeTabView()
+    ChartsTabView()
 }
