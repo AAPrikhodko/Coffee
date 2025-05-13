@@ -22,14 +22,12 @@ struct GeoCountryMapView: UIViewRepresentable {
         mapView.isRotateEnabled = false
         mapView.isPitchEnabled = false
 
-        // 🔹 Упрощённая конфигурация карты
+        // 🔹 Упрощённая карта
         if #available(iOS 16.0, *) {
             let config = MKStandardMapConfiguration(elevationStyle: .flat)
             config.pointOfInterestFilter = .excludingAll
             config.showsTraffic = false
             mapView.preferredConfiguration = config
-
-            // buildings отключаются отдельно
             mapView.showsBuildings = false
         } else {
             mapView.mapType = .mutedStandard
@@ -37,7 +35,7 @@ struct GeoCountryMapView: UIViewRepresentable {
             mapView.showsBuildings = false
         }
 
-        // 🔹 Начальный регион
+        // 🔹 Регион
         mapView.setRegion(
             MKCoordinateRegion(
                 center: CLLocationCoordinate2D(latitude: 20, longitude: 0),
@@ -46,13 +44,12 @@ struct GeoCountryMapView: UIViewRepresentable {
             animated: false
         )
 
-        // 🔹 Жест нажатия
+        // 🔹 Жест
         let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
         mapView.addGestureRecognizer(tap)
 
-        // 🔹 Загрузка границ стран
+        // 🔹 Загрузка геоданных
         context.coordinator.loadGeoJSON(into: mapView)
-
         return mapView
     }
 
@@ -67,12 +64,20 @@ struct GeoCountryMapView: UIViewRepresentable {
         init(records: [Record], selectedCountryCode: Binding<String?>) {
             self.records = records
             self._selectedCountryCode = selectedCountryCode
-            self.visitedCountries = Set(records.compactMap { $0.place.countryCode })
+
+            let codes = records
+                .compactMap { $0.place.countryCode }
+                .compactMap { isoA2(from: $0) }
+                .map { $0.uppercased() }
+
+            self.visitedCountries = Set(codes)
+            print("Visited countries: \(self.visitedCountries)")
         }
 
         func loadGeoJSON(into mapView: MKMapView) {
             guard let url = Bundle.main.url(forResource: "countries", withExtension: "json"),
                   let data = try? Data(contentsOf: url) else {
+                print("Failed to load countries.json")
                 return
             }
 
@@ -81,12 +86,13 @@ struct GeoCountryMapView: UIViewRepresentable {
                     .decode(data)
                     .compactMap { $0 as? MKGeoJSONFeature }
 
+                print("Total features: \(features.count)")
+
                 for feature in features {
-                    // Получаем ISO_A2 код
                     var isoCode: String?
                     if let propsData = feature.properties,
                        let props = try? JSONSerialization.jsonObject(with: propsData) as? [String: Any] {
-                        isoCode = props["iso_a2"] as? String
+                        isoCode = (props["iso_a2"] as? String)?.uppercased()
                     }
 
                     for geometry in feature.geometry {
@@ -100,9 +106,13 @@ struct GeoCountryMapView: UIViewRepresentable {
                                 overlays.append(subPolygon)
                                 mapView.addOverlay(subPolygon)
                             }
+                        } else {
+                            print("Unsupported geometry: \(geometry)")
                         }
                     }
                 }
+
+                print("Loaded \(overlays.count) polygons")
             } catch {
                 print("GeoJSON parse error: \(error)")
             }
@@ -133,16 +143,48 @@ struct GeoCountryMapView: UIViewRepresentable {
             }
 
             let renderer = MKPolygonRenderer(polygon: polygon)
-            if let code = polygon.title, visitedCountries.contains(code ?? "") {
-                renderer.fillColor = UIColor.systemYellow.withAlphaComponent(0.7)
-            } else {
-                renderer.fillColor = UIColor.systemGray4.withAlphaComponent(0.3)
+            renderer.strokeColor = UIColor.black.withAlphaComponent(0.7)
+            renderer.lineWidth = 0.4
+
+            guard let code = polygon.title else {
+                print("⚠️ Polygon without ISO code")
+                renderer.fillColor = UIColor.systemGray.withAlphaComponent(1)
+                return renderer
             }
 
-            renderer.strokeColor = UIColor.black.withAlphaComponent(0.3)
-            renderer.lineWidth = 0.4
+            let isVisited = visitedCountries.contains(code)
+            print("🗺 Rendering polygon for: \(code) – Visited: \(isVisited)")
+
+            renderer.fillColor = isVisited
+                ? UIColor.systemYellow.withAlphaComponent(1)
+                : UIColor.systemGray.withAlphaComponent(1)
+
             return renderer
         }
+
     }
+}
+
+func isoA2(from countryName: String) -> String? {
+    let locale = Locale(identifier: "en_US")
+
+    if #available(iOS 16.0, *) {
+        for region in Locale.Region.isoRegions {
+            let code = region.identifier  // например: "IT"
+            if let name = locale.localizedString(forRegionCode: code),
+               name.uppercased() == countryName.uppercased() {
+                return code
+            }
+        }
+    } else {
+        for code in Locale.isoRegionCodes {
+            if let name = locale.localizedString(forRegionCode: code),
+               name.uppercased() == countryName.uppercased() {
+                return code
+            }
+        }
+    }
+
+    return nil
 }
 
