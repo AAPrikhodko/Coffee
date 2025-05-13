@@ -77,7 +77,7 @@ struct GeoCountryMapView: UIViewRepresentable {
         func loadGeoJSON(into mapView: MKMapView) {
             guard let url = Bundle.main.url(forResource: "countries", withExtension: "json"),
                   let data = try? Data(contentsOf: url) else {
-                print("Failed to load countries.json")
+                print("❌ Failed to load countries.json")
                 return
             }
 
@@ -86,15 +86,27 @@ struct GeoCountryMapView: UIViewRepresentable {
                     .decode(data)
                     .compactMap { $0 as? MKGeoJSONFeature }
 
-                print("Total features: \(features.count)")
+                print("🌍 Total features: \(features.count)")
 
                 for feature in features {
                     var isoCode: String?
+
                     if let propsData = feature.properties,
                        let props = try? JSONSerialization.jsonObject(with: propsData) as? [String: Any] {
+
+                        // Получаем ISO-код
                         isoCode = (props["iso_a2"] as? String)?.uppercased()
+
+                        // 🔁 Попытка восстановить код, если он "-99" или отсутствует
+                        if isoCode == nil || isoCode == "-99",
+                           let adminName = props["admin"] as? String,
+                           let resolved = isoA2(from: adminName) {
+                            print("🔁 Resolved ISO from admin '\(adminName)' → \(resolved)")
+                            isoCode = resolved
+                        }
                     }
 
+                    // Обработка геометрии
                     for geometry in feature.geometry {
                         if let polygon = geometry as? MKPolygon {
                             polygon.setValue(isoCode, forKey: "title")
@@ -107,16 +119,17 @@ struct GeoCountryMapView: UIViewRepresentable {
                                 mapView.addOverlay(subPolygon)
                             }
                         } else {
-                            print("Unsupported geometry: \(geometry)")
+                            print("⚠️ Unsupported geometry: \(geometry)")
                         }
                     }
                 }
 
-                print("Loaded \(overlays.count) polygons")
+                print("✅ Loaded \(overlays.count) polygons")
             } catch {
-                print("GeoJSON parse error: \(error)")
+                print("❌ GeoJSON parse error: \(error)")
             }
         }
+
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let mapView = gesture.view as? MKMapView else { return }
