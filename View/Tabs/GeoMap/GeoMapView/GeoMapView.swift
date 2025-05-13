@@ -163,18 +163,36 @@ struct ClusterDetailSheet: View {
     var onEdit: (Record) -> Void
 
     var body: some View {
-        Spacer(minLength: 12)
-        
-        List(records) { record in
-            RecordRowView(
-                record: record,
-                onEdit: { onEdit(record) },
-                onDelete: {
-                    // Optional: handle deletion
-                }
-            )
+        if records.isEmpty {
+            VStack(spacing: 16) {
+                Spacer()
+                Image(systemName: "cup.and.saucer.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.secondary)
+
+                Text("You haven't drunk coffee in this country yet.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+
+                Spacer()
+            }
+        } else {
+            Spacer(minLength: 12)
+            
+            List(records) { record in
+                RecordRowView(
+                    record: record,
+                    onEdit: { onEdit(record) },
+                    onDelete: {
+                        // Optional: handle deletion
+                    }
+                )
+            }
+            .listStyle(.plain)
         }
-        .listStyle(.plain)
     }
 }
+
 

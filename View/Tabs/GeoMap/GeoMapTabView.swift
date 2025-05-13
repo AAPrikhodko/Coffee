@@ -9,8 +9,11 @@ import SwiftUI
 
 struct GeoMapTabView: View {
     @Environment(RecordsViewModel.self) private var recordsViewModel
+    @Environment(AuthViewModel.self) private var authViewModel
+    
     @State private var mapMode: MapMode = .locations
     @State private var selectedCountry: CountrySelection?
+    @State private var selectedRecordForEdit: Record?
     @State private var showStatsDetail = false
 
     private var allRecords: [Record] {
@@ -18,8 +21,13 @@ struct GeoMapTabView: View {
     }
 
     private var recordsBySelectedCountry: [Record] {
-        guard let code = selectedCountry?.code else { return [] }
-        return allRecords.filter { $0.place.countryCode == code }
+        guard let selectedISO = selectedCountry?.code else { return [] }
+
+        return allRecords.filter {
+            guard let countryName = $0.place.countryCode,
+                  let isoCode = isoA2(from: countryName) else { return false }
+            return isoCode.uppercased() == selectedISO
+        }
     }
 
     var body: some View {
@@ -80,11 +88,24 @@ struct GeoMapTabView: View {
                 .padding([.bottom, .trailing], 20)
             }
             .sheet(item: $selectedCountry) { selection in
-                CountryStatsSheet(
-                    countryCode: selection.code,
-                    records: recordsBySelectedCountry
+                ClusterDetailSheet(
+                    records: recordsBySelectedCountry,
+                    onEdit: { record in
+                        selectedCountry = nil
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            selectedRecordForEdit = record
+                        }
+                    }
                 )
                 .presentationDetents([.medium, .large])
+            }
+            .sheet(item: $selectedRecordForEdit) { record in
+                AddRecordView(
+                    isSheetShown: .constant(false),
+                    authViewModel: authViewModel,
+                    recordsViewModel: recordsViewModel,
+                    editingRecord: record
+                )
             }
             .sheet(isPresented: $showStatsDetail) {
                 GeoStatsDetailView()
@@ -122,42 +143,3 @@ struct CountrySelection: Identifiable, Equatable {
     let code: String
     var id: String { code }
 }
-
-
-struct CountryStatsSheet: View {
-    let countryCode: String
-    let records: [Record]
-
-    var body: some View {
-        NavigationStack {
-            List {
-                StatRow(label: "Country Code", value: countryCode)
-                StatRow(label: "Total Drinks", value: "\(records.count)")
-                StatRow(label: "Unique Cities", value: "\(Set(records.map { $0.place.cityName }).count)")
-
-                if let top = records.group(by: \.drinkType).max(by: { $0.value.count < $1.value.count })?.key {
-                    StatRow(label: "Top Drink", value: top.displayName)
-                }
-
-                let totalSpent = records.reduce(0) { $0 + $1.price }
-                StatRow(label: "Total Spent", value: String(format: "%.2f", totalSpent))
-            }
-            .navigationTitle("Country Stats")
-        }
-    }
-
-    private struct StatRow: View {
-        let label: String
-        let value: String
-
-        var body: some View {
-            HStack {
-                Text(label)
-                    .foregroundColor(.secondary)
-                Spacer()
-                Text(value)
-            }
-        }
-    }
-}
-
