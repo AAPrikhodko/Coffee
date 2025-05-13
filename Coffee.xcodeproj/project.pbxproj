@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		75688C232DC3A82400275524 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 75D360942DC27AF6007843D3 /* GoogleService-Info.plist */; };
+		759E99D02DD35C2E002B117E /* countries.json in Resources */ = {isa = PBXBuildFile; fileRef = 759E99CF2DD35C2E002B117E /* countries.json */; };
 		75D35F9F2DB27D92007843D3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75D35F9B2DB27D92007843D3 /* Assets.xcassets */; };
 		75D35FCC2DB27D92007843D3 /* CoffeeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D35F9C2DB27D92007843D3 /* CoffeeApp.swift */; };
 		75D360972DC27CA7007843D3 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 75D360962DC27CA7007843D3 /* FirebaseAnalytics */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		759E99CF2DD35C2E002B117E /* countries.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = countries.json; sourceTree = "<group>"; };
 		75D35F9B2DB27D92007843D3 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		75D35F9C2DB27D92007843D3 /* CoffeeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoffeeApp.swift; sourceTree = "<group>"; };
 		75D360942DC27AF6007843D3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 				Tabs/Charts/Stats/ByQuantity/PreviewStatByQuantityView.swift,
 				Tabs/Charts/Stats/ByQuantity/StatByQuantityView.swift,
 				Tabs/Charts/Stats/ByQuantity/WeeklyRecordsChartView.swift,
+				Tabs/GeoMap/GeoCountryMap/GeoCountryMapView.swift,
 				Tabs/GeoMap/GeoMapStatsOverlay/GeoMapStatsOverlay.swift,
 				Tabs/GeoMap/GeoMapTabView.swift,
 				Tabs/GeoMap/GeoMapView/GeoMapView.swift,
@@ -218,6 +221,7 @@
 		75DA51A72D44FB5F00840578 = {
 			isa = PBXGroup;
 			children = (
+				759E99CF2DD35C2E002B117E /* countries.json */,
 				75688C2E2DCAA12100275524 /* Shared */,
 				75DA51B12D44FB5F00840578 /* Products */,
 				75D3600B2DC27ABF007843D3 /* Data */,
@@ -315,6 +319,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				75D35F9F2DB27D92007843D3 /* Assets.xcassets in Resources */,
+				759E99D02DD35C2E002B117E /* countries.json in Resources */,
 				75688C232DC3A82400275524 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
