@@ -25,30 +25,33 @@ struct GeoMapView: View {
     let records: [Record]
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
-                MapAnnotation(coordinate: cluster.coordinate) {
-                    Button {
-                        selectedCluster = cluster
-                    } label: {
-                        Text("☕ \(cluster.records.count)")
-                            .font(.caption)
-                            .fontWeight(.bold)
-                            .padding(6)
-                            .background(Color.white.opacity(0.9))
-                            .clipShape(Capsule())
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                Map(coordinateRegion: $region, annotationItems: recordClusters) { cluster in
+                    MapAnnotation(coordinate: cluster.coordinate) {
+                        Button {
+                            selectedCluster = cluster
+                        } label: {
+                            Text("☕ \(cluster.records.count)")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .padding(6)
+                                .background(Color.white.opacity(0.9))
+                                .clipShape(Capsule())
+                        }
+                        .id(cluster.id)
                     }
-                    .id(cluster.id)
                 }
+
+                GeoMapStatsOverlay(records: records) {
+                    showFullGeoStats = true
+                }
+                .padding(.top, geometry.safeAreaInsets.top + 70) // 👈 теперь overlay не перекрывает статусбар
             }
-            
-            GeoMapStatsOverlay(records: records) {
-                showFullGeoStats = true
-            }
-            .padding(.top, 12)
+            .edgesIgnoringSafeArea(.top) // ✅ только верх
         }
 
-        // Sheet: список записей кластера
+        // 📦 Sheet: кластер деталей
         .sheet(item: $selectedCluster) { cluster in
             ClusterDetailSheet(
                 records: cluster.records,
@@ -62,7 +65,7 @@ struct GeoMapView: View {
             .presentationDetents([.medium, .large])
         }
 
-        // Sheet: редактирование записи
+        // ✏️ Sheet: редактирование записи
         .sheet(item: $selectedRecordForEdit) { record in
             AddRecordView(
                 isSheetShown: .constant(false),
@@ -72,7 +75,7 @@ struct GeoMapView: View {
             )
         }
 
-        // Sheet: полная статистика
+        // 📊 Sheet: общая статистика
         .sheet(isPresented: $showFullGeoStats) {
             GeoStatsDetailView()
         }
@@ -82,6 +85,7 @@ struct GeoMapView: View {
             recordClusters = computeClusters()
             lastDelta = region.span.latitudeDelta
         }
+
         .onChange(of: region.span.latitudeDelta) { newDelta in
             if abs(newDelta - lastDelta) > 0.01 {
                 lastDelta = newDelta
@@ -116,6 +120,7 @@ struct GeoMapView: View {
         region = MKCoordinateRegion(center: center, span: span)
     }
 }
+
 
 
 struct RecordClusterWrapper: Identifiable, Equatable {

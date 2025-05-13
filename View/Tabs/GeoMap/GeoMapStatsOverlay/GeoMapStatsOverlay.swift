@@ -76,7 +76,7 @@ struct GeoMapStatsOverlay: View {
             }
         }
         .padding(.all, 10)
-        .frame(maxWidth: 320)
+        .frame(maxWidth: 270)
         .background(.ultraThinMaterial)
         .cornerRadius(12)
         .shadow(radius: 3)
