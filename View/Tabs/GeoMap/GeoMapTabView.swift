@@ -36,12 +36,12 @@ struct GeoMapTabView: View {
                 Group {
                     switch mapMode {
                     case .locations:
-                        GeoMapView(records: allRecords)
+                        LocationsMapView(records: allRecords)
                             .transition(.opacity)
 
                     case .countries:
                         ZStack(alignment: .top) {
-                            GeoCountryMapView(
+                            CountriesMapView(
                                 records: allRecords,
                                 selectedCountryCode: Binding(
                                     get: { selectedCountry?.code },
@@ -50,7 +50,7 @@ struct GeoMapTabView: View {
                                     }
                                 )
                             )
-                            GeoMapStatsOverlay(records: allRecords) {
+                            StatsOverlayView(records: allRecords) {
                                 showStatsDetail = true
                             }
                             .padding(.top, geometry.safeAreaInsets.top + 8) // 👈 Смещение под статусбар
@@ -70,22 +70,23 @@ struct GeoMapTabView: View {
                                 selectedCountry = nil
                             }
                         } label: {
-                            Label(mode.label, systemImage: mode.iconName)
-                                .padding(.vertical, 6)
-                                .padding(.horizontal, 10)
-                                .background(.ultraThinMaterial.opacity(0.9))
-                                .cornerRadius(8)
+                            Label {
+                                Text((mode == mapMode ? " ✓   " : "       ") + mode.label)
+                            } icon: {
+                                Image(systemName: mode.iconName)
+                            }
                         }
                     }
                 } label: {
                     Image(systemName: "map")
                         .font(.title3)
                         .padding(10)
-                        .background(.ultraThinMaterial)
+                        .background(.ultraThinMaterial.opacity(0.9))
                         .clipShape(Circle())
                         .shadow(radius: 2)
                 }
                 .padding([.bottom, .trailing], 20)
+
             }
             .sheet(item: $selectedCountry) { selection in
                 ClusterDetailSheet(
@@ -108,7 +109,7 @@ struct GeoMapTabView: View {
                 )
             }
             .sheet(isPresented: $showStatsDetail) {
-                GeoStatsDetailView()
+                GeoStatsView()
             }
         }
     }

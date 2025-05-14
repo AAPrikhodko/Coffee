@@ -8,7 +8,7 @@
 import SwiftUI
 import MapKit
 
-struct GeoCountryMapView: UIViewRepresentable {
+struct CountriesMapView: UIViewRepresentable {
     let records: [Record]
     @Binding var selectedCountryCode: String?
 

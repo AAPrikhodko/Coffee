@@ -1,5 +1,5 @@
 //
-//  GeoStatsDetailView.swift
+//  GeoStatsView.swift
 //  Coffee
 //
 //  Created by Andrei on 11.05.2025.
@@ -8,7 +8,7 @@
 import SwiftUI
 import Charts
 
-struct GeoStatsDetailView: View {
+struct GeoStatsView: View {
     @Environment(RecordsViewModel.self) private var recordsViewModel
 
     @State private var selectedCountry: String = "All countries"

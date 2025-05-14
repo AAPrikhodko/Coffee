@@ -1,5 +1,5 @@
 //
-//  GeoMapStatsOverlay.swift
+//  StatsOverlayView.swift
 //  Coffee
 //
 //  Created by Andrei on 11.05.2025.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct GeoMapStatsOverlay: View {
+struct StatsOverlayView: View {
     let records: [Record]
     var onShowDetails: () -> Void
 

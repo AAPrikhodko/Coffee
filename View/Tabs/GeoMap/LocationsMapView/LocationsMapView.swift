@@ -1,5 +1,5 @@
 //
-//  GeoMapView.swift
+//  LocationsMapView.swift
 //  Coffee
 //
 //  Created by Andrei on 10.05.2025.
@@ -7,7 +7,7 @@
 import MapKit
 import SwiftUI
 
-struct GeoMapView: View {
+struct LocationsMapView: View {
     @Environment(AuthViewModel.self) private var authViewModel
     @Environment(RecordsViewModel.self) private var recordsViewModel
 
@@ -43,7 +43,7 @@ struct GeoMapView: View {
                     }
                 }
 
-                GeoMapStatsOverlay(records: records) {
+                StatsOverlayView(records: records) {
                     showFullGeoStats = true
                 }
                 .padding(.top, geometry.safeAreaInsets.top + 70) // 👈 теперь overlay не перекрывает статусбар
@@ -77,7 +77,7 @@ struct GeoMapView: View {
 
         // 📊 Sheet: общая статистика
         .sheet(isPresented: $showFullGeoStats) {
-            GeoStatsDetailView()
+            GeoStatsView()
         }
 
         .onAppear {
