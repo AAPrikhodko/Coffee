@@ -18,6 +18,10 @@ struct ContentView: View {
                     Tab("Charts", systemImage: "chart.bar") {
                         ChartsTabView()
                     }
+                    
+                    Tab("Charts", systemImage: "chart.bar") {
+                        ChartsTabView2()
+                    }
 
                     Tab("Calendar", systemImage: "calendar") {
                         CalendarTabView()
