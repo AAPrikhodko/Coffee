@@ -29,7 +29,6 @@ struct ChartsTabView2: View {
     private let defaultStartDate: Date
     private let defaultEndDate: Date
 
-    @State private var selectedDateRange = Date()...Date()
     @State private var measure: Measure = .spent
     @State private var chartType: ChartType = .bar
     @State private var periodStep: PeriodStep = .month
@@ -73,7 +72,7 @@ struct ChartsTabView2: View {
                 .padding(.horizontal)
             }
 
-            // 🔹 Основной блок
+            // 🔹 Информационный блок
             HStack {
                 VStack(alignment: .leading) {
                     Text("123")
@@ -94,7 +93,7 @@ struct ChartsTabView2: View {
             }
             .padding(.horizontal)
 
-            // 🔹 Карусель
+            // 🔹 Графики
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
                     ForEach(0..<5) { index in
@@ -115,6 +114,9 @@ struct ChartsTabView2: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .onChange(of: periodStep) { newValue in
+                    updateDates(for: newValue)
+                }
 
                 Spacer()
 
@@ -128,7 +130,7 @@ struct ChartsTabView2: View {
             }
             .padding(.horizontal)
 
-            // 🔹 Группировка и список
+            // 🔹 Группировка и фильтры
             VStack(alignment: .leading, spacing: 0) {
                 Picker("Group by", selection: $groupBy) {
                     ForEach(GroupBy.allCases, id: \.self) {
@@ -154,8 +156,49 @@ struct ChartsTabView2: View {
                     }
                 }
                 .listStyle(.plain)
-                .background(Color.white)
             }
+        }
+        .onChange(of: startDate) { _ in syncStepWithDates() }
+        .onChange(of: endDate) { _ in syncStepWithDates() }
+    }
+    
+    // MARK: — Синхронизация step <-> dates
+    
+    func syncStepWithDates() {
+        guard let end = endDate else { return }
+        let days = Calendar.current.dateComponents([.day], from: startDate, to: end).day ?? 0
+        print(days)
+        if days < 15 {
+            periodStep = .week
+        } else if days < 84 {
+            periodStep = .month
+        } else {
+            periodStep = .year
+        }
+    }
+
+    func updateDates(for step: PeriodStep) {
+        let calendar = Calendar.current
+        let today = Date()
+        let end = endDate ?? today
+        let maxEnd = min(end, today)
+
+        switch step {
+        case .week:
+            let weekday = calendar.component(.weekday, from: maxEnd)
+            let startOfWeek = calendar.date(byAdding: .day, value: -(weekday - calendar.firstWeekday), to: maxEnd)!
+            startDate = calendar.startOfDay(for: startOfWeek)
+            endDate = min(calendar.date(byAdding: .day, value: 6, to: startDate)!, today)
+
+        case .month:
+            let comps = calendar.dateComponents([.year, .month], from: maxEnd)
+            startDate = calendar.date(from: comps)!
+            endDate = min(endOfMonth(for: startDate), today)
+
+        case .year:
+            let comps = calendar.dateComponents([.year], from: maxEnd)
+            startDate = calendar.date(from: comps)!
+            endDate = min(endOfYear(for: startDate), today)
         }
     }
 
