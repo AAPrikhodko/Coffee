@@ -166,28 +166,34 @@ struct ChartsTabView2: View {
                         endDate != nil &&
                         Calendar.current.isDate(endDate!, inSameDayAs: defaultEndDate)
 
-        return HStack(spacing: 4) {
-            Text(formattedPeriod())
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.blue.opacity(0.15))
-                .cornerRadius(8)
-                .onTapGesture {
-                    showDatePicker = true
-                }
+        return HStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Text(formattedPeriod())
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
 
-            Image(systemName: isDefault ? "chevron.down" : "xmark.circle.fill")
-                .foregroundColor(.gray)
-                .onTapGesture {
-                    if isDefault {
-                        showDatePicker = true
-                    } else {
-                        startDate = defaultStartDate
-                        endDate = defaultEndDate
+                Image(systemName: isDefault ? "chevron.down.circle.fill" : "xmark.circle.fill")
+                    .foregroundColor(.gray)
+                    .onTapGesture {
+                        if isDefault {
+                            showDatePicker = true
+                        } else {
+                            startDate = defaultStartDate
+                            endDate = defaultEndDate
+                        }
                     }
-                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.blue.opacity(0.15))
+            .cornerRadius(8)
+            .onTapGesture {
+                showDatePicker = true
+            }
         }
     }
+
+
 
     // MARK: — Helpers
 
@@ -206,23 +212,29 @@ struct ChartsTabView2: View {
     }
 
     func filterTag(title: String, removable: Bool = true, onTap: (() -> Void)? = nil) -> some View {
-        HStack(spacing: 4) {
-            Text(title)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.blue.opacity(0.15))
-                .cornerRadius(8)
-                .onTapGesture { onTap?() }
+        HStack(spacing: 6) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .lineLimit(1)
 
-            if removable {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.gray)
-                    .onTapGesture {
-                        selectedFilters.removeAll { $0 == title }
-                    }
+                if removable {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.gray)
+                        .onTapGesture {
+                            selectedFilters.removeAll { $0 == title }
+                        }
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.blue.opacity(0.15))
+            .cornerRadius(8)
+            .onTapGesture {
+                onTap?()
             }
         }
     }
+
 
     // MARK: — Форматирование периода
 
