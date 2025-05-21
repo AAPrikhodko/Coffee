@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct DateIntervalPickerView: View {
-    @Binding var startDate: Date
-    @Binding var endDate: Date?
-    @Binding var isPresented: Bool
+    let initialStartDate: Date
+    let initialEndDate: Date?
     let registrationDate: Date
+    var onConfirm: (Date, Date?) -> Void
+    
+    @Environment(\.dismiss) private var dismiss
 
+    @State private var tempStartDate: Date
+    @State private var tempEndDate: Date?
     @State private var activeField: ActiveField = .start
     @State private var currentDate = Date()
 
@@ -23,17 +27,34 @@ struct DateIntervalPickerView: View {
     private var registrationYear: Int { calendar.component(.year, from: registrationDate) }
     
     @Namespace var scrollAnchor
+    
+    init(
+        initialStartDate: Date,
+        initialEndDate: Date?,
+        registrationDate: Date,
+        onConfirm: @escaping (Date, Date?) -> Void
+    ) {
+        self.initialStartDate = initialStartDate
+        self.initialEndDate = initialEndDate
+        self.registrationDate = registrationDate
+        self.onConfirm = onConfirm
+        _tempStartDate = State(initialValue: initialStartDate)
+        _tempEndDate = State(initialValue: initialEndDate)
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Button("Close") { isPresented = false }
+                    Button("Close") { dismiss() }
                     Spacer()
                     Text("Select period").font(.headline)
                     Spacer()
-                    Button("OK") { isPresented = false }
+                    Button("OK") {
+                        onConfirm(tempStartDate, tempEndDate)
+                        dismiss()
+                    }
                 }
                 .padding()
 
@@ -41,7 +62,7 @@ struct DateIntervalPickerView: View {
                 HStack(spacing: 0) {
                     dateField(
                         title: "Start date",
-                        dateText: dateString(startDate),
+                        dateText: dateString(tempStartDate),
                         isActive: activeField == .start
                     ) {
                         activeField = .start
@@ -49,7 +70,7 @@ struct DateIntervalPickerView: View {
 
                     dateField(
                         title: "End date",
-                        dateText: endDate.map(dateString) ?? "",
+                        dateText: tempEndDate.map(dateString) ?? "",
                         isActive: activeField == .end
                     ) {
                         activeField = .end
@@ -81,8 +102,8 @@ struct DateIntervalPickerView: View {
                                        monthDate <= currentDate {
                                         MonthView(
                                             monthDate: monthDate,
-                                            startDate: $startDate,
-                                            endDate: $endDate,
+                                            tempStartDate: $tempStartDate,
+                                            tempEndDate: $tempEndDate,
                                             activeField: $activeField,
                                             registrationDate: registrationDate,
                                             currentDate: currentDate

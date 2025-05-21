@@ -8,8 +8,8 @@ import SwiftUI
 
 struct MonthView: View {
     let monthDate: Date
-    @Binding var startDate: Date
-    @Binding var endDate: Date?
+    @Binding var tempStartDate: Date
+    @Binding var tempEndDate: Date?
     @Binding var activeField: DateIntervalPickerView.ActiveField
 
     let registrationDate: Date
@@ -45,8 +45,8 @@ struct MonthView: View {
         VStack(alignment: .leading, spacing: 4) {
             Button(action: {
                 // Выбор месяца полностью
-                startDate = startOfMonth
-                endDate = endOfMonth
+                tempStartDate = startOfMonth
+                tempEndDate = endOfMonth
                 activeField = .start
             }) {
                 Text(monthName(monthDate))
@@ -67,8 +67,8 @@ struct MonthView: View {
                     if let day = paddedDays[index] {
                         let isDisabled = day < registrationDate || day > currentDate
                         let isInRange = inRange(day)
-                        let isStart = calendar.isDate(day, inSameDayAs: startDate)
-                        let isEnd = endDate != nil && calendar.isDate(day, inSameDayAs: endDate!)
+                        let isStart = calendar.isDate(day, inSameDayAs: tempStartDate)
+                        let isEnd = tempEndDate != nil && calendar.isDate(day, inSameDayAs: tempEndDate!)
 
                         Button(action: {
                             handleSelection(day)
@@ -94,8 +94,8 @@ struct MonthView: View {
     }
 
     func inRange(_ day: Date) -> Bool {
-        if let end = endDate {
-            return (startDate...end).contains(day) && !calendar.isDate(day, inSameDayAs: startDate) && !calendar.isDate(day, inSameDayAs: end)
+        if let end = tempEndDate {
+            return (tempStartDate...end).contains(day) && !calendar.isDate(day, inSameDayAs: tempStartDate) && !calendar.isDate(day, inSameDayAs: end)
         }
         return false
     }
@@ -103,24 +103,24 @@ struct MonthView: View {
     func handleSelection(_ day: Date) {
         switch activeField {
         case .start:
-            startDate = day
-            endDate = nil
+            tempStartDate = day
+            tempEndDate = nil
             activeField = .end
         case .end:
-            if day >= startDate {
-                endDate = day
+            if day >= tempStartDate {
+                tempEndDate = day
                 activeField = .start
             } else {
-                endDate = startDate
-                startDate = day
+                tempEndDate = tempStartDate
+                tempStartDate = day
                 activeField = .start
             }
         }
     }
     
     var isWholeMonthSelected: Bool {
-        guard let end = endDate else { return false }
-        return calendar.isDate(startDate, equalTo: startOfMonth, toGranularity: .day) &&
+        guard let end = tempEndDate else { return false }
+        return calendar.isDate(tempStartDate, equalTo: startOfMonth, toGranularity: .day) &&
                calendar.isDate(end, equalTo: endOfMonth, toGranularity: .day)
     }
 

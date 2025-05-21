@@ -39,6 +39,7 @@ struct ChartsTabView2: View {
     @State private var startDate: Date
     @State private var endDate: Date?
     @State private var registrationDate: Date = Calendar.current.date(from: DateComponents(year: 2023, month: 3, day: 15))!
+    @State private var isManualDateChange = false
 
     init() {
         let calendar = Calendar.current
@@ -58,11 +59,15 @@ struct ChartsTabView2: View {
                     periodTag()
                         .sheet(isPresented: $showDatePicker) {
                             DateIntervalPickerView(
-                                startDate: $startDate,
-                                endDate: $endDate,
-                                isPresented: $showDatePicker,
+                                initialStartDate: startDate,
+                                initialEndDate: endDate,
                                 registrationDate: registrationDate
-                            )
+                            ) { newStart, newEnd in
+                                startDate = newStart
+                                endDate = newEnd
+                                isManualDateChange = true
+                                syncStepWithDates()
+                            }
                         }
 
                     ForEach(selectedFilters, id: \.self) { filter in
@@ -115,7 +120,9 @@ struct ChartsTabView2: View {
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: periodStep) { newValue in
-                    updateDates(for: newValue)
+                    if !isManualDateChange {
+                        updateDates(for: newValue)
+                    }
                 }
 
                 Spacer()
@@ -158,16 +165,27 @@ struct ChartsTabView2: View {
                 .listStyle(.plain)
             }
         }
-        .onChange(of: startDate) { _ in syncStepWithDates() }
-        .onChange(of: endDate) { _ in syncStepWithDates() }
+        .onChange(of: startDate) { _ in
+            if isManualDateChange {
+                isManualDateChange = false
+                syncStepWithDates()
+            }
+        }
+        .onChange(of: endDate) { _ in
+            if isManualDateChange {
+                isManualDateChange = false
+                syncStepWithDates()
+            }
+        }
     }
     
     // MARK: — Синхронизация step <-> dates
     
     func syncStepWithDates() {
-        guard let end = endDate else { return }
+        let end = endDate ?? startDate  // если endDate отсутствует — используем startDate
         let days = Calendar.current.dateComponents([.day], from: startDate, to: end).day ?? 0
-        print(days)
+
+
         if days < 15 {
             periodStep = .week
         } else if days < 84 {
