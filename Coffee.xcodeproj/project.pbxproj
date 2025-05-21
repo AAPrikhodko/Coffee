@@ -92,6 +92,8 @@
 				Shared/Auth/AuthView.swift,
 				Shared/Buttons/AddDrinkButton.swift,
 				Shared/Content/ContentView.swift,
+				Shared/DateIntervalPicker/DateIntervalPickerView.swift,
+				Shared/DateIntervalPicker/Month/MonthView.swift,
 				Shared/StatTag/StatTag.swift,
 				Tabs/Calendar/CalendarDay/CalendarDayView.swift,
 				Tabs/Calendar/CalendarMonthGrid/CalendarMonthGridView.swift,

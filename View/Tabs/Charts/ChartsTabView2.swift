@@ -32,13 +32,29 @@ struct ChartsTabView2: View {
     @State private var periodStep: PeriodStep = .month
     @State private var groupBy: GroupBy = .coffeeType
     @State private var selectedFilters: [String] = []
+    
+    @State private var showDatePicker = false
+    @State private var startDate: Date = Calendar.current.date(from: DateComponents(year: 2024, month: 1, day: 1))!
+    @State private var endDate: Date? = Date()
+    @State private var registrationDate: Date = Calendar.current.date(from: DateComponents(year: 2023, month: 3, day: 15))!
+
 
     var body: some View {
         VStack(spacing: 16) {
             // 🔹 Горизонтальный скролл фильтров
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
-                    filterTag(title: "Период", removable: false)
+                    filterTag(title: formattedPeriod(), removable: false) {
+                        showDatePicker = true
+                    }
+                    .sheet(isPresented: $showDatePicker) {
+                        DateIntervalPickerView(
+                            startDate: $startDate,
+                            endDate: $endDate,
+                            isPresented: $showDatePicker,
+                            registrationDate: registrationDate
+                        )
+                    }
                     ForEach(selectedFilters, id: \.self) { filter in
                         filterTag(title: filter)
                     }
@@ -149,13 +165,16 @@ struct ChartsTabView2: View {
         }
     }
 
-    func filterTag(title: String, removable: Bool = true) -> some View {
+    func filterTag(title: String, removable: Bool = true, onTap: (() -> Void)? = nil) -> some View {
         HStack(spacing: 4) {
             Text(title)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(Color.blue.opacity(0.15))
                 .cornerRadius(8)
+                .onTapGesture {
+                    onTap?()
+                }
             if removable {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.gray)
@@ -163,6 +182,17 @@ struct ChartsTabView2: View {
                         selectedFilters.removeAll { $0 == title }
                     }
             }
+        }
+    }
+    
+    func formattedPeriod() -> String {
+        let df = DateFormatter()
+        df.dateFormat = "d MMM"
+
+        if let end = endDate, startDate != end {
+            return "\(df.string(from: startDate)) - \(df.string(from: end))"
+        } else {
+            return df.string(from: startDate)
         }
     }
 }

@@ -1,0 +1,124 @@
+//
+//  MonthView.swift
+//  Coffee
+//
+//  Created by Andrei on 21.05.2025.
+//
+import SwiftUI
+
+struct MonthView: View {
+    let monthDate: Date
+    @Binding var startDate: Date
+    @Binding var endDate: Date?
+    @Binding var activeField: DateIntervalPickerView.ActiveField
+
+    let registrationDate: Date
+    let currentDate: Date
+
+    private var calendar: Calendar { .current }
+    private var daysInMonth: [Date] {
+        guard let range = calendar.range(of: .day, in: .month, for: monthDate) else { return [] }
+        return range.compactMap { day -> Date? in
+            let comps = calendar.dateComponents([.year, .month], from: monthDate)
+            return calendar.date(from: DateComponents(year: comps.year, month: comps.month, day: day))
+        }
+    }
+
+    private var isCurrentMonth: Bool {
+        calendar.isDate(monthDate, equalTo: currentDate, toGranularity: .month)
+    }
+
+    private var startOfMonth: Date {
+        calendar.date(from: calendar.dateComponents([.year, .month], from: monthDate))!
+    }
+
+    private var endOfMonth: Date {
+        if isCurrentMonth {
+            return currentDate
+        } else {
+            let comps = DateComponents(month: 1, day: -1)
+            return calendar.date(byAdding: comps, to: startOfMonth)!
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button(action: {
+                // Выбор месяца полностью
+                startDate = startOfMonth
+                endDate = endOfMonth
+                activeField = .start
+            }) {
+                Text(monthName(monthDate))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .padding(.bottom, 2)
+            }
+
+            let firstWeekday = calendar.component(.weekday, from: daysInMonth.first!)
+            let prefixEmptyDays = (firstWeekday + 5) % 7 // to start from Monday
+            let paddedDays = Array(repeating: nil as Date?, count: prefixEmptyDays) + daysInMonth.map { Optional($0) }
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 6) {
+                ForEach(paddedDays.indices, id: \.self) { index in
+                    if let day = paddedDays[index] {
+                        let isDisabled = day < registrationDate || day > currentDate
+                        let isInRange = inRange(day)
+                        let isStart = calendar.isDate(day, inSameDayAs: startDate)
+                        let isEnd = endDate != nil && calendar.isDate(day, inSameDayAs: endDate!)
+
+                        Button(action: {
+                            handleSelection(day)
+                        }) {
+                            Text("\(calendar.component(.day, from: day))")
+                                .frame(maxWidth: .infinity, minHeight: 32)
+                                .background(
+                                    isStart || isEnd
+                                    ? Color.blue
+                                    : isInRange ? Color.gray.opacity(0.3) : Color.clear
+                                )
+                                .foregroundColor(isDisabled ? .gray : .primary)
+                                .clipShape(Circle())
+                        }
+                        .disabled(isDisabled)
+                    } else {
+                        Text("")
+                            .frame(maxWidth: .infinity, minHeight: 32)
+                    }
+                }
+            }
+        }
+    }
+
+    func inRange(_ day: Date) -> Bool {
+        if let end = endDate {
+            return (startDate...end).contains(day) && !calendar.isDate(day, inSameDayAs: startDate) && !calendar.isDate(day, inSameDayAs: end)
+        }
+        return false
+    }
+
+    func handleSelection(_ day: Date) {
+        switch activeField {
+        case .start:
+            startDate = day
+            endDate = nil
+            activeField = .end
+        case .end:
+            if day >= startDate {
+                endDate = day
+                activeField = .start
+            } else {
+                endDate = startDate
+                startDate = day
+                activeField = .start
+            }
+        }
+    }
+
+    func monthName(_ date: Date) -> String {
+        let df = DateFormatter()
+        df.dateFormat = "LLLL yyyy"
+        return df.string(from: date)
+    }
+}
+
