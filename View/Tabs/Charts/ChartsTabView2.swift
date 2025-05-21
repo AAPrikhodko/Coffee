@@ -240,10 +240,18 @@ struct ChartsTabView2: View {
 
     func formattedPeriod() -> String {
         let calendar = Calendar.current
-        let nowYear = calendar.component(.year, from: Date())
-        let dfShortMonth = DateFormatter(); dfShortMonth.dateFormat = "MMM"
-        let dfFullDayMonth = DateFormatter(); dfFullDayMonth.dateFormat = "d MMM"
-        let dfDayMonthYear = DateFormatter(); dfDayMonthYear.dateFormat = "d MMM yyyy"
+        let today = Date()
+        let nowYear = calendar.component(.year, from: today)
+        let nowMonth = calendar.component(.month, from: today)
+
+        let dfShortMonth = DateFormatter()
+        dfShortMonth.dateFormat = "MMM"
+
+        let dfFullDayMonth = DateFormatter()
+        dfFullDayMonth.dateFormat = "d MMM"
+
+        let dfDayMonthYear = DateFormatter()
+        dfDayMonthYear.dateFormat = "d MMM yyyy"
 
         guard let end = endDate else {
             let year = calendar.component(.year, from: startDate)
@@ -257,17 +265,33 @@ struct ChartsTabView2: View {
                                    : dfDayMonthYear.string(from: startDate)
         }
 
+        let startYear = calendar.component(.year, from: startDate)
+        let endYear = calendar.component(.year, from: end)
+        let startMonth = calendar.component(.month, from: startDate)
+
+        let isStartOfCurrentMonth = calendar.isDate(startDate, inSameDayAs: startOfMonth(for: today))
+        let isEndToday = calendar.isDate(end, inSameDayAs: today)
+        let isStartOfCurrentYear = calendar.isDate(startDate, inSameDayAs: startOfYear(for: today))
+
+        // ✅ Специальный случай: текущий месяц (с 1 числа до сегодня)
+        if isStartOfCurrentMonth && isEndToday {
+            return dfShortMonth.string(from: today) // "May"
+        }
+
+        // ✅ Специальный случай: текущий год (с 1 января до сегодня)
+        if isStartOfCurrentYear && isEndToday {
+            return "\(nowYear)"
+        }
+
+        // ⬇️ Остальная логика
         let isFullMonths = calendar.isDate(startDate, equalTo: startOfMonth(for: startDate), toGranularity: .day) &&
                            calendar.isDate(end, equalTo: endOfMonth(for: end), toGranularity: .day)
 
         let isFullYears = calendar.isDate(startDate, equalTo: startOfYear(for: startDate), toGranularity: .day) &&
                           calendar.isDate(end, equalTo: endOfYear(for: end), toGranularity: .day)
 
-        let startYear = calendar.component(.year, from: startDate)
-        let endYear = calendar.component(.year, from: end)
-
-        let startMonth = dfShortMonth.string(from: startDate)
-        let endMonth = dfShortMonth.string(from: end)
+        let startMonthStr = dfShortMonth.string(from: startDate)
+        let endMonthStr = dfShortMonth.string(from: end)
 
         switch (isFullMonths, isFullYears) {
         case (_, true):
@@ -277,15 +301,13 @@ struct ChartsTabView2: View {
 
         case (true, false):
             if calendar.isDate(startDate, equalTo: end, toGranularity: .month) {
-                return startYear == nowYear ? startMonth : "\(startMonth) \(startYear)"
+                return startYear == nowYear ? startMonthStr : "\(startMonthStr) \(startYear)"
+            } else if startYear == endYear {
+                return startYear == nowYear
+                    ? "\(startMonthStr) - \(endMonthStr)"
+                    : "\(startMonthStr) - \(endMonthStr), \(startYear)"
             } else {
-                if startYear == endYear {
-                    return startYear == nowYear
-                        ? "\(startMonth) - \(endMonth)"
-                        : "\(startMonth) - \(endMonth), \(startYear)"
-                } else {
-                    return "\(startMonth) \(startYear) - \(endMonth) \(endYear)"
-                }
+                return "\(startMonthStr) \(startYear) - \(endMonthStr) \(endYear)"
             }
 
         case (false, false):
@@ -294,17 +316,18 @@ struct ChartsTabView2: View {
 
             if calendar.isDate(startDate, equalTo: end, toGranularity: .month) {
                 let yearSuffix = startYear != nowYear ? " \(startYear)" : ""
-                return "\(startDay) - \(endDay) \(startMonth)\(yearSuffix)"
+                return "\(startDay) - \(endDay) \(startMonthStr)\(yearSuffix)"
             } else {
                 if startYear == endYear {
                     let suffix = startYear != nowYear ? " \(startYear)" : ""
-                    return "\(startDay) \(startMonth) - \(endDay) \(endMonth)\(suffix)"
+                    return "\(startDay) \(startMonthStr) - \(endDay) \(endMonthStr)\(suffix)"
                 } else {
                     return "\(dfFullDayMonth.string(from: startDate)) \(startYear) - \(dfFullDayMonth.string(from: end)) \(endYear)"
                 }
             }
         }
     }
+
 
     func startOfMonth(for date: Date) -> Date {
         Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: date))!
