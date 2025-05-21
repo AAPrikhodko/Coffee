@@ -26,43 +26,46 @@ struct ChartsTabView2: View {
         case city = "by City"
     }
 
+    private let defaultStartDate: Date
+    private let defaultEndDate: Date
+
     @State private var selectedDateRange = Date()...Date()
     @State private var measure: Measure = .spent
     @State private var chartType: ChartType = .bar
     @State private var periodStep: PeriodStep = .month
     @State private var groupBy: GroupBy = .coffeeType
     @State private var selectedFilters: [String] = []
-    
+
     @State private var showDatePicker = false
-    @State private var startDate: Date = Calendar.current.date(from: DateComponents(year: 2024, month: 1, day: 1))!
-    @State private var endDate: Date? = Date()
+    @State private var startDate: Date
+    @State private var endDate: Date?
     @State private var registrationDate: Date = Calendar.current.date(from: DateComponents(year: 2023, month: 3, day: 15))!
 
     init() {
         let calendar = Calendar.current
         let now = Date()
-        if let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) {
-            _startDate = State(initialValue: startOfCurrentMonth)
-            _endDate = State(initialValue: now)
-        }
+        let start = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
+        _startDate = State(initialValue: start)
+        _endDate = State(initialValue: now)
+        self.defaultStartDate = start
+        self.defaultEndDate = now
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
-            // 🔹 Горизонтальный скролл фильтров
+            // 🔹 Фильтры
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
-                    filterTag(title: formattedPeriod(), removable: false) {
-                        showDatePicker = true
-                    }
-                    .sheet(isPresented: $showDatePicker) {
-                        DateIntervalPickerView(
-                            startDate: $startDate,
-                            endDate: $endDate,
-                            isPresented: $showDatePicker,
-                            registrationDate: registrationDate
-                        )
-                    }
+                    periodTag()
+                        .sheet(isPresented: $showDatePicker) {
+                            DateIntervalPickerView(
+                                startDate: $startDate,
+                                endDate: $endDate,
+                                isPresented: $showDatePicker,
+                                registrationDate: registrationDate
+                            )
+                        }
+
                     ForEach(selectedFilters, id: \.self) { filter in
                         filterTag(title: filter)
                     }
@@ -70,7 +73,7 @@ struct ChartsTabView2: View {
                 .padding(.horizontal)
             }
 
-            // 🔹 Информационный блок + переключатель
+            // 🔹 Основной блок
             HStack {
                 VStack(alignment: .leading) {
                     Text("123")
@@ -91,7 +94,7 @@ struct ChartsTabView2: View {
             }
             .padding(.horizontal)
 
-            // 🔹 Карусель графиков
+            // 🔹 Карусель
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
                     ForEach(0..<5) { index in
@@ -104,11 +107,11 @@ struct ChartsTabView2: View {
                 .padding(.horizontal)
             }
 
-            // 🔹 Переключатели шагов и типа графика
+            // 🔹 Переключатели
             HStack {
                 Picker("Step", selection: $periodStep) {
-                    ForEach(PeriodStep.allCases, id: \.self) { step in
-                        Text(step.rawValue)
+                    ForEach(PeriodStep.allCases, id: \.self) {
+                        Text($0.rawValue)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -116,8 +119,8 @@ struct ChartsTabView2: View {
                 Spacer()
 
                 Picker("Chart", selection: $chartType) {
-                    ForEach(ChartType.allCases, id: \.self) { type in
-                        Image(systemName: type == .bar ? "chart.bar" : "chart.pie")
+                    ForEach(ChartType.allCases, id: \.self) {
+                        Image(systemName: $0 == .bar ? "chart.bar" : "chart.pie")
                     }
                 }
                 .pickerStyle(.segmented)
@@ -125,18 +128,17 @@ struct ChartsTabView2: View {
             }
             .padding(.horizontal)
 
-            // 🔹 Селектор группировки — теперь ближе к списку
+            // 🔹 Группировка и список
             VStack(alignment: .leading, spacing: 0) {
                 Picker("Group by", selection: $groupBy) {
-                    ForEach(GroupBy.allCases, id: \.self) { group in
-                        Text(group.rawValue)
+                    ForEach(GroupBy.allCases, id: \.self) {
+                        Text($0.rawValue)
                     }
                 }
                 .pickerStyle(.menu)
                 .padding(.horizontal)
-                .padding(.bottom, 4) // Минимальный отступ
+                .padding(.bottom, 4)
 
-                // 🔹 Список значений
                 List {
                     ForEach(0..<10) { index in
                         Button {
@@ -148,7 +150,7 @@ struct ChartsTabView2: View {
                                 .background(Color.gray.opacity(0.1))
                                 .cornerRadius(8)
                         }
-                        .listRowBackground(Color.white) // Убираем стандартную заливку
+                        .listRowBackground(Color.white)
                     }
                 }
                 .listStyle(.plain)
@@ -157,7 +159,37 @@ struct ChartsTabView2: View {
         }
     }
 
-    // MARK: — Вспомогательные функции
+    // MARK: — Period Tag
+
+    func periodTag() -> some View {
+        let isDefault = Calendar.current.isDate(startDate, inSameDayAs: defaultStartDate) &&
+                        endDate != nil &&
+                        Calendar.current.isDate(endDate!, inSameDayAs: defaultEndDate)
+
+        return HStack(spacing: 4) {
+            Text(formattedPeriod())
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.blue.opacity(0.15))
+                .cornerRadius(8)
+                .onTapGesture {
+                    showDatePicker = true
+                }
+
+            Image(systemName: isDefault ? "chevron.down" : "xmark.circle.fill")
+                .foregroundColor(.gray)
+                .onTapGesture {
+                    if isDefault {
+                        showDatePicker = true
+                    } else {
+                        startDate = defaultStartDate
+                        endDate = defaultEndDate
+                    }
+                }
+        }
+    }
+
+    // MARK: — Helpers
 
     func icon(for m: Measure) -> String {
         switch m {
@@ -180,9 +212,8 @@ struct ChartsTabView2: View {
                 .padding(.vertical, 6)
                 .background(Color.blue.opacity(0.15))
                 .cornerRadius(8)
-                .onTapGesture {
-                    onTap?()
-                }
+                .onTapGesture { onTap?() }
+
             if removable {
                 Image(systemName: "xmark.circle.fill")
                     .foregroundColor(.gray)
@@ -192,19 +223,15 @@ struct ChartsTabView2: View {
             }
         }
     }
-    
+
+    // MARK: — Форматирование периода
+
     func formattedPeriod() -> String {
         let calendar = Calendar.current
         let nowYear = calendar.component(.year, from: Date())
-
-        let dfShortMonth = DateFormatter()
-        dfShortMonth.dateFormat = "MMM"
-
-        let dfFullDayMonth = DateFormatter()
-        dfFullDayMonth.dateFormat = "d MMM"
-
-        let dfDayMonthYear = DateFormatter()
-        dfDayMonthYear.dateFormat = "d MMM yyyy"
+        let dfShortMonth = DateFormatter(); dfShortMonth.dateFormat = "MMM"
+        let dfFullDayMonth = DateFormatter(); dfFullDayMonth.dateFormat = "d MMM"
+        let dfDayMonthYear = DateFormatter(); dfDayMonthYear.dateFormat = "d MMM yyyy"
 
         guard let end = endDate else {
             let year = calendar.component(.year, from: startDate)
@@ -212,18 +239,15 @@ struct ChartsTabView2: View {
                                    : dfDayMonthYear.string(from: startDate)
         }
 
-        // Одинаковый день
         if calendar.isDate(startDate, inSameDayAs: end) {
             let year = calendar.component(.year, from: startDate)
             return year == nowYear ? dfFullDayMonth.string(from: startDate)
                                    : dfDayMonthYear.string(from: startDate)
         }
 
-        // Полные месяцы
         let isFullMonths = calendar.isDate(startDate, equalTo: startOfMonth(for: startDate), toGranularity: .day) &&
                            calendar.isDate(end, equalTo: endOfMonth(for: end), toGranularity: .day)
 
-        // Полные годы
         let isFullYears = calendar.isDate(startDate, equalTo: startOfYear(for: startDate), toGranularity: .day) &&
                           calendar.isDate(end, equalTo: endOfYear(for: end), toGranularity: .day)
 
@@ -235,11 +259,9 @@ struct ChartsTabView2: View {
 
         switch (isFullMonths, isFullYears) {
         case (_, true):
-            if startYear == endYear {
-                return startYear == nowYear ? "Year" : "\(startYear)"
-            } else {
-                return "\(startYear) - \(endYear)"
-            }
+            return startYear == endYear
+                ? (startYear == nowYear ? "Year" : "\(startYear)")
+                : "\(startYear) - \(endYear)"
 
         case (true, false):
             if calendar.isDate(startDate, equalTo: end, toGranularity: .month) {
@@ -259,33 +281,25 @@ struct ChartsTabView2: View {
             let endDay = calendar.component(.day, from: end)
 
             if calendar.isDate(startDate, equalTo: end, toGranularity: .month) {
-                let month = dfShortMonth.string(from: startDate)
                 let yearSuffix = startYear != nowYear ? " \(startYear)" : ""
-                return "\(startDay) - \(endDay) \(month)\(yearSuffix)"
+                return "\(startDay) - \(endDay) \(startMonth)\(yearSuffix)"
             } else {
-                let startStr = dfFullDayMonth.string(from: startDate)
-                let endStr = dfFullDayMonth.string(from: end)
-
                 if startYear == endYear {
-                    let year = startYear
-                    let suffix = year != nowYear ? " \(year)" : ""
+                    let suffix = startYear != nowYear ? " \(startYear)" : ""
                     return "\(startDay) \(startMonth) - \(endDay) \(endMonth)\(suffix)"
                 } else {
-                    return "\(startStr) \(startYear) - \(endStr) \(endYear)"
+                    return "\(dfFullDayMonth.string(from: startDate)) \(startYear) - \(dfFullDayMonth.string(from: end)) \(endYear)"
                 }
             }
         }
     }
-
-
 
     func startOfMonth(for date: Date) -> Date {
         Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: date))!
     }
 
     func endOfMonth(for date: Date) -> Date {
-        let start = startOfMonth(for: date)
-        return Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: start)!
+        Calendar.current.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth(for: date))!
     }
 
     func startOfYear(for date: Date) -> Date {
@@ -293,7 +307,7 @@ struct ChartsTabView2: View {
     }
 
     func endOfYear(for date: Date) -> Date {
-        let start = startOfYear(for: date)
-        return Calendar.current.date(byAdding: DateComponents(year: 1, day: -1), to: start)!
+        Calendar.current.date(byAdding: DateComponents(year: 1, day: -1), to: startOfYear(for: date))!
     }
 }
+
