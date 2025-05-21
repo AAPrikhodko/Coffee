@@ -15,16 +15,16 @@ struct DateIntervalPickerView: View {
 
     @State private var activeField: ActiveField = .start
     @State private var currentDate = Date()
-    
+
     enum ActiveField { case start, end }
-    
+
     private var calendar: Calendar { .current }
     private var currentYear: Int { calendar.component(.year, from: Date()) }
     private var registrationYear: Int { calendar.component(.year, from: registrationDate) }
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 8) {
+            VStack(spacing: 0) {
                 // Header
                 HStack {
                     Button("Close") { isPresented = false }
@@ -35,45 +35,60 @@ struct DateIntervalPickerView: View {
                 }
                 .padding()
 
-                // Start / End date fields
-                HStack {
+                // Поля выбора Start / End
+                HStack(spacing: 0) {
                     VStack {
-                        Text("Start date")
-                            .foregroundStyle(.secondary)
+                        Text("Start date").font(.caption).foregroundStyle(.secondary)
                         Text(dateString(startDate))
-                            .fontWeight(activeField == .start ? .bold : .regular)
-                            .underline(activeField == .start)
                             .onTapGesture { activeField = .start }
                     }
-                    Spacer()
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 4)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: activeField == .start ? 3 : 1)
+                            .foregroundColor(activeField == .start ? .blue : .gray.opacity(0.4)),
+                        alignment: .bottom
+                    )
+
                     VStack {
-                        Text("End date")
-                            .foregroundStyle(.secondary)
-                        Text(endDate.map(dateString) ?? "—")
-                            .fontWeight(activeField == .end ? .bold : .regular)
-                            .underline(activeField == .end)
-                            .onTapGesture { activeField = .end }
+                        Text("End date").font(.caption).foregroundStyle(.secondary)
+                        if let end = endDate {
+                            Text(dateString(end))
+                                .onTapGesture { activeField = .end }
+                        }
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 4)
+                    .overlay(
+                        Rectangle()
+                            .frame(height: activeField == .end ? 3 : 1)
+                            .foregroundColor(activeField == .end ? .blue : .gray.opacity(0.4)),
+                        alignment: .bottom
+                    )
                 }
                 .padding(.horizontal)
 
-                // Weekday row
+                // День недели
                 HStack {
-                    ForEach(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], id: \.self) { day in
-                        Text(day).frame(maxWidth: .infinity)
-                            .font(.caption).foregroundColor(.secondary)
+                    ForEach(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], id: \.self) {
+                        Text($0)
+                            .frame(maxWidth: .infinity)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
-                .padding(.horizontal, 6)
+                .padding(.top, 8)
+                .padding(.horizontal)
 
-                // Scroll of months
+                // Скролл месяцев
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 16) {
                         ForEach(registrationYear...currentYear, id: \.self) { year in
                             ForEach(1...12, id: \.self) { month in
-                                let components = DateComponents(year: year, month: month)
-                                if let monthDate = calendar.date(from: components),
-                                   monthDate >= calendar.startOfDay(for: registrationDate),
+                                let comps = DateComponents(year: year, month: month)
+                                if let monthDate = calendar.date(from: comps),
+                                   monthDate >= registrationDate,
                                    monthDate <= currentDate {
                                     MonthView(
                                         monthDate: monthDate,
@@ -99,3 +114,4 @@ struct DateIntervalPickerView: View {
         return df.string(from: date)
     }
 }
+

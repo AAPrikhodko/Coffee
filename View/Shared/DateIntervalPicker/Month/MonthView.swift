@@ -51,8 +51,11 @@ struct MonthView: View {
             }) {
                 Text(monthName(monthDate))
                     .font(.subheadline)
-                    .fontWeight(.medium)
-                    .padding(.bottom, 2)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .background(isWholeMonthSelected ? Color.blue.opacity(0.2) : Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                    .foregroundColor(.primary)
             }
 
             let firstWeekday = calendar.component(.weekday, from: daysInMonth.first!)
@@ -74,8 +77,8 @@ struct MonthView: View {
                                 .frame(maxWidth: .infinity, minHeight: 32)
                                 .background(
                                     isStart || isEnd
-                                    ? Color.blue
-                                    : isInRange ? Color.gray.opacity(0.3) : Color.clear
+                                    ? Color.blue.opacity(0.2)
+                                    : isInRange ? Color.gray.opacity(0.1) : Color.clear
                                 )
                                 .foregroundColor(isDisabled ? .gray : .primary)
                                 .clipShape(Circle())
@@ -114,10 +117,18 @@ struct MonthView: View {
             }
         }
     }
+    
+    var isWholeMonthSelected: Bool {
+        guard let end = endDate else { return false }
+        return calendar.isDate(startDate, equalTo: startOfMonth, toGranularity: .day) &&
+               calendar.isDate(end, equalTo: endOfMonth, toGranularity: .day)
+    }
 
     func monthName(_ date: Date) -> String {
         let df = DateFormatter()
-        df.dateFormat = "LLLL yyyy"
+        let year = calendar.component(.year, from: date)
+        let currentYear = calendar.component(.year, from: Date())
+        df.dateFormat = (year == currentYear) ? "LLLL" : "LLLL yyyy"
         return df.string(from: date)
     }
 }
