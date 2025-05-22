@@ -21,9 +21,9 @@ struct ChartsTabView2: View {
     }
 
     enum GroupBy: String, CaseIterable {
-        case coffeeType = "by Coffee type"
-        case country = "by Country"
-        case city = "by City"
+        case coffeeType = "By Coffee"
+        case country = "By Country"
+        case city = "By City"
     }
 
     private let defaultStartDate: Date
@@ -50,7 +50,7 @@ struct ChartsTabView2: View {
         self.defaultStartDate = start
         self.defaultEndDate = now
     }
-
+    
     var body: some View {
         VStack(spacing: 16) {
             // 🔹 Фильтры
@@ -136,33 +136,59 @@ struct ChartsTabView2: View {
                 .frame(width: 120)
             }
             .padding(.horizontal)
+            .padding(.vertical)
 
-            // 🔹 Группировка и фильтры
-            VStack(alignment: .leading, spacing: 0) {
+            // Селектор GroupBy
+            Menu {
                 Picker("Group by", selection: $groupBy) {
-                    ForEach(GroupBy.allCases, id: \.self) {
-                        Text($0.rawValue)
+                    ForEach(GroupBy.allCases, id: \.self) { group in
+                        Text(group.rawValue)
                     }
                 }
-                .pickerStyle(.menu)
+            } label: {
+                HStack {
+                    Text(groupBy.rawValue)
+                        .font(.headline)
+                        .foregroundColor(.black)
+                    Image(systemName: "chevron.down")
+                        .foregroundColor(.gray)
+                    Spacer()
+                }
                 .padding(.horizontal)
-                .padding(.bottom, 4)
+            }
+            
+            // 🔹 Прокручиваемый список
+            ScrollView {
+                VStack(spacing: 1) {
+                    ForEach(0..<20) { index in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Category \(index + 1)")
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text("\(Int.random(in: 1...50)) transactions")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
 
-                List {
-                    ForEach(0..<10) { index in
-                        Button {
-                            addFilter("Value \(index + 1)")
-                        } label: {
-                            Text("Value \(index + 1)")
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color.gray.opacity(0.1))
-                                .cornerRadius(8)
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 4) {
+                                Text("-\(Int.random(in: 100...900)) €")
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                Text("\(Int.random(in: 5...40))%")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
                         }
-                        .listRowBackground(Color.white)
+                        .padding()
+                        .background(Color(.systemGray6))
                     }
                 }
-                .listStyle(.plain)
+                .cornerRadius(12)
+                .padding(.horizontal)
+                .padding(.bottom, 100) // чтобы не наезжало на табы
             }
         }
         .onChange(of: startDate) { _ in
@@ -178,6 +204,7 @@ struct ChartsTabView2: View {
             }
         }
     }
+
     
     // MARK: — Синхронизация step <-> dates
     
