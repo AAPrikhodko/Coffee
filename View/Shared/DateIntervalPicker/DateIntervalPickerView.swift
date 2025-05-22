@@ -145,10 +145,10 @@ func dateField(title: String, dateText: String, isActive: Bool, onTap: @escaping
             .onTapGesture { onTap() }
     }
     .frame(maxWidth: .infinity)
-    .padding(.bottom, 4)
+    .padding(.bottom, 10)
     .overlay(
         Rectangle()
-            .frame(height: isActive ? 3 : 1)
+            .frame(width: 120, height: isActive ? 3 : 1)
             .foregroundColor(isActive ? .blue : .gray.opacity(0.4)),
         alignment: .bottom
     )
