@@ -84,7 +84,7 @@ struct ChartsTabView2: View {
 
     
     var availableGroupBys: [GroupBy] {
-        var usedTypes = Set(activeFilters.map { $0.type })
+        let usedTypes = Set(activeFilters.map { $0.type })
 
         return GroupBy.allCases.filter {
             switch $0 {
@@ -521,7 +521,6 @@ struct ChartsTabView2: View {
         let calendar = Calendar.current
         let today = Date()
         let nowYear = calendar.component(.year, from: today)
-        let nowMonth = calendar.component(.month, from: today)
 
         let dfShortMonth = DateFormatter()
         dfShortMonth.dateFormat = "MMM"
@@ -546,7 +545,6 @@ struct ChartsTabView2: View {
 
         let startYear = calendar.component(.year, from: startDate)
         let endYear = calendar.component(.year, from: end)
-        let startMonth = calendar.component(.month, from: startDate)
 
         let isStartOfCurrentMonth = calendar.isDate(startDate, inSameDayAs: startOfMonth(for: today))
         let isEndToday = calendar.isDate(end, inSameDayAs: today)
