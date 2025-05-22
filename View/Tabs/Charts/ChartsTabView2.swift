@@ -25,7 +25,9 @@ struct ChartsTabView2: View {
         case country = "By Country"
         case city = "By City"
     }
-
+    
+    @Environment(RecordsViewModel.self) private var recordsViewModel
+    
     private let defaultStartDate: Date
     private let defaultEndDate: Date
 
@@ -49,6 +51,21 @@ struct ChartsTabView2: View {
         _endDate = State(initialValue: now)
         self.defaultStartDate = start
         self.defaultEndDate = now
+    }
+    
+    var totalValue: Double {
+        guard let end = endDate else { return 0 }
+        let interval = DateInterval(start: startDate, end: end)
+        let filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+
+        switch measure {
+        case .spent:
+            return filtered.map(\.price).reduce(0, +)
+        case .cups:
+            return Double(filtered.count)
+        case .liters:
+            return Double(filtered.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+        }
     }
     
     var body: some View {
@@ -80,10 +97,11 @@ struct ChartsTabView2: View {
             // 🔹 Информационный блок
             HStack {
                 VStack(alignment: .leading) {
-                    Text("123")
-                        .font(.largeTitle).bold()
+                    Text(valueFormatted())
+                        .font(.title).bold()
                     Text(measure.rawValue)
-                        .font(.caption).foregroundColor(.secondary)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
                 Spacer()
                 HStack(spacing: 12) {
@@ -160,24 +178,32 @@ struct ChartsTabView2: View {
             // 🔹 Прокручиваемый список
             ScrollView {
                 VStack(spacing: 1) {
-                    ForEach(0..<20) { index in
+                    ForEach(groupedItems()) { item in
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Category \(index + 1)")
+                            HStack(spacing: 12) {
+                                if let icon = item.icon {
+                                    Image(icon)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 28, height: 28)
+                                }
+                                Text(item.label)
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                Text("\(Int.random(in: 1...50)) transactions")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
                             }
 
                             Spacer()
 
                             VStack(alignment: .trailing, spacing: 4) {
-                                Text("-\(Int.random(in: 100...900)) €")
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                                Text("\(Int.random(in: 5...40))%")
+                                switch measure {
+                                case .spent:
+                                    Text(String(format: "%.2f €", item.value))
+                                case .cups:
+                                    Text("\(Int(item.value)) cups")
+                                case .liters:
+                                    Text(String(format: "%.1f L", item.value))
+                                }
+                                Text(String(format: "%.1f%%", item.percent))
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
@@ -188,7 +214,7 @@ struct ChartsTabView2: View {
                 }
                 .cornerRadius(12)
                 .padding(.horizontal)
-                .padding(.bottom, 100) // чтобы не наезжало на табы
+                .padding(.bottom, 100)
             }
         }
         .onChange(of: startDate) { _ in
@@ -202,6 +228,103 @@ struct ChartsTabView2: View {
                 isManualDateChange = false
                 syncStepWithDates()
             }
+        }
+    }
+
+    // MARK: — Группировка данных
+
+    func groupedItems() -> [GroupedItem] {
+        guard let end = endDate else { return [] }
+        let interval = DateInterval(start: startDate, end: end)
+        let filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+
+        switch groupBy {
+        case .coffeeType:
+            let grouped = Dictionary(grouping: filtered, by: \.drinkType)
+            let values = grouped.map { (type, records) -> GroupedItem in
+                let value: Double
+                switch measure {
+                case .spent:
+                    value = records.map(\.price).reduce(0, +)
+                case .cups:
+                    value = Double(records.count)
+                case .liters:
+                    value = Double(records.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+                }
+                return GroupedItem(
+                    label: type.displayName,
+                    value: value,
+                    percent: 0, // updated later
+                    icon: type.imageName,
+                    color: colorForDrinkType(type)
+                )
+            }
+            let total = values.map(\.value).reduce(0, +)
+            return values.map {
+                GroupedItem(
+                    label: $0.label,
+                    value: $0.value,
+                    percent: total == 0 ? 0 : $0.value / total * 100,
+                    icon: $0.icon,
+                    color: $0.color
+                )
+            }.sorted { $0.value > $1.value }
+
+        case .country:
+            let grouped = Dictionary(grouping: filtered) { $0.place.countryCode ?? "?" }
+            let values = grouped.map { (country, records) -> GroupedItem in
+                let value: Double
+                switch measure {
+                case .spent:
+                    value = records.map(\.price).reduce(0, +)
+                case .cups:
+                    value = Double(records.count)
+                case .liters:
+                    value = Double(records.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+                }
+                return GroupedItem(
+                    label: country,
+                    value: value,
+                    percent: 0,
+                    icon: nil,
+                    color: colorForCountry(country)
+                )
+            }
+            let total = values.map(\.value).reduce(0, +)
+            return values.map {
+                GroupedItem(
+                    label: $0.label,
+                    value: $0.value,
+                    percent: total == 0 ? 0 : $0.value / total * 100,
+                    icon: $0.icon,
+                    color: $0.color
+                )
+            }.sorted { $0.value > $1.value }
+
+        case .city:
+            return []
+        }
+    }
+
+    func colorForDrinkType(_ type: DrinkType) -> Color {
+        switch type {
+        case .americano: return .brown
+        case .latte: return .orange
+        case .cappuccino: return .yellow
+        case .macchiato: return .purple
+        case .flatWhite: return .blue
+        case .espresso: return .black
+        }
+    }
+
+    func colorForCountry(_ code: String) -> Color {
+        // Простой маппинг по странам — можно заменить более осмысленным
+        switch code.uppercased() {
+        case "FR": return .blue
+        case "US": return .red
+        case "IT": return .green
+        case "JP": return .pink
+        default: return .gray
         }
     }
 
@@ -415,7 +538,17 @@ struct ChartsTabView2: View {
             }
         }
     }
-
+    
+    func valueFormatted() -> String {
+        switch measure {
+        case .spent:
+            return String(format: "%.2f €", totalValue)
+        case .cups:
+            return "\(Int(totalValue))"
+        case .liters:
+            return String(format: "%.1f", totalValue)
+        }
+    }
 
     func startOfMonth(for date: Date) -> Date {
         Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: date))!
@@ -434,3 +567,12 @@ struct ChartsTabView2: View {
     }
 }
 
+// MARK: - ItemModel для списка
+struct GroupedItem: Identifiable {
+    var id: String { label }
+    let label: String
+    let value: Double
+    let percent: Double
+    let icon: String?
+    let color: Color
+}
