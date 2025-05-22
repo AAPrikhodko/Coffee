@@ -60,6 +60,7 @@
 				DrinkSize.swift,
 				DrinkType.swift,
 				EquatableCoordinateRegion.swift,
+				Filter.swift,
 				GeoMap.swift,
 				HomeTab.swift,
 				Place.swift,

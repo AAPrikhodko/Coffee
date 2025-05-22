@@ -42,6 +42,7 @@ struct ChartsTabView2: View {
     @State private var endDate: Date?
     @State private var registrationDate: Date = Calendar.current.date(from: DateComponents(year: 2023, month: 3, day: 15))!
     @State private var isManualDateChange = false
+    @State private var activeFilters: [Filter] = []
 
     init() {
         let calendar = Calendar.current
@@ -56,7 +57,20 @@ struct ChartsTabView2: View {
     var totalValue: Double {
         guard let end = endDate else { return 0 }
         let interval = DateInterval(start: startDate, end: end)
-        let filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+        
+        var filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+
+        // Фильтрация по активным фильтрам
+        for filter in activeFilters {
+            switch filter.type {
+            case .coffeeType:
+                filtered = filtered.filter { $0.drinkType.displayName == filter.value }
+            case .country:
+                filtered = filtered.filter { $0.place.countryCode == filter.value }
+//            case .city:
+//                filtered = filtered.filter { $0.place.city == filter.value }
+            }
+        }
 
         switch measure {
         case .spent:
@@ -65,6 +79,19 @@ struct ChartsTabView2: View {
             return Double(filtered.count)
         case .liters:
             return Double(filtered.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+        }
+    }
+
+    
+    var availableGroupBys: [GroupBy] {
+        var usedTypes = Set(activeFilters.map { $0.type })
+
+        return GroupBy.allCases.filter {
+            switch $0 {
+            case .coffeeType: return !usedTypes.contains(.coffeeType)
+            case .country: return !usedTypes.contains(.country)
+            case .city: return true // пока не реализовано
+            }
         }
     }
     
@@ -87,8 +114,8 @@ struct ChartsTabView2: View {
                             }
                         }
 
-                    ForEach(selectedFilters, id: \.self) { filter in
-                        filterTag(title: filter)
+                    ForEach(activeFilters) { filter in
+                        filterTag(filter: filter)
                     }
                 }
                 .padding(.horizontal)
@@ -159,7 +186,7 @@ struct ChartsTabView2: View {
             // Селектор GroupBy
             Menu {
                 Picker("Group by", selection: $groupBy) {
-                    ForEach(GroupBy.allCases, id: \.self) { group in
+                    ForEach(availableGroupBys, id: \.self) { group in
                         Text(group.rawValue)
                     }
                 }
@@ -210,6 +237,24 @@ struct ChartsTabView2: View {
                         }
                         .padding()
                         .background(Color(.systemGray6))
+                        .onTapGesture {
+                            switch groupBy {
+                            case .coffeeType:
+                                let filter = Filter(type: .coffeeType, value: item.label)
+                                if !activeFilters.contains(filter) {
+                                    activeFilters.append(filter)
+                                    switchToNextGroupBy()
+                                }
+                            case .country:
+                                let filter = Filter(type: .country, value: item.label)
+                                if !activeFilters.contains(filter) {
+                                    activeFilters.append(filter)
+                                    switchToNextGroupBy()
+                                }
+                            case .city:
+                                break
+                            }
+                        }
                     }
                 }
                 .cornerRadius(12)
@@ -236,7 +281,16 @@ struct ChartsTabView2: View {
     func groupedItems() -> [GroupedItem] {
         guard let end = endDate else { return [] }
         let interval = DateInterval(start: startDate, end: end)
-        let filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+        var filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+
+        for filter in activeFilters {
+            switch filter.type {
+            case .coffeeType:
+                filtered = filtered.filter { $0.drinkType.displayName == filter.value }
+            case .country:
+                filtered = filtered.filter { $0.place.countryCode == filter.value }
+            }
+        }
 
         switch groupBy {
         case .coffeeType:
@@ -422,26 +476,40 @@ struct ChartsTabView2: View {
         }
     }
 
-    func filterTag(title: String, removable: Bool = true, onTap: (() -> Void)? = nil) -> some View {
+    func filterTag(filter: Filter) -> some View {
         HStack(spacing: 6) {
-            HStack(spacing: 6) {
-                Text(title)
-                    .lineLimit(1)
-
-                if removable {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.gray)
-                        .onTapGesture {
-                            selectedFilters.removeAll { $0 == title }
-                        }
+            Text(filter.displayValue)
+            Image(systemName: "xmark.circle.fill")
+                .foregroundColor(.gray)
+                .onTapGesture {
+                    if let index = activeFilters.firstIndex(of: filter) {
+                        activeFilters.remove(at: index)
+                        restoreGroupBy(for: filter)
+                    }
                 }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.blue.opacity(0.15))
+        .cornerRadius(8)
+    }
+    
+    func switchToNextGroupBy() {
+        let remaining = availableGroupBys
+        if let next = remaining.first(where: { $0 != groupBy }) {
+            groupBy = next
+        }
+    }
+
+    func restoreGroupBy(for filter: Filter) {
+        switch filter.type {
+        case .coffeeType:
+            if !availableGroupBys.contains(.coffeeType) {
+                groupBy = .coffeeType
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.blue.opacity(0.15))
-            .cornerRadius(8)
-            .onTapGesture {
-                onTap?()
+        case .country:
+            if !availableGroupBys.contains(.country) {
+                groupBy = .country
             }
         }
     }
