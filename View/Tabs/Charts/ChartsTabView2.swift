@@ -67,8 +67,8 @@ struct ChartsTabView2: View {
                 filtered = filtered.filter { $0.drinkType.displayName == filter.value }
             case .country:
                 filtered = filtered.filter { $0.place.countryCode == filter.value }
-//            case .city:
-//                filtered = filtered.filter { $0.place.city == filter.value }
+            case .city:
+                filtered = filtered.filter { $0.place.cityName == filter.value }
             }
         }
 
@@ -84,16 +84,29 @@ struct ChartsTabView2: View {
 
     
     var availableGroupBys: [GroupBy] {
+        var result: [GroupBy] = []
         let usedTypes = Set(activeFilters.map { $0.type })
 
-        return GroupBy.allCases.filter {
-            switch $0 {
-            case .coffeeType: return !usedTypes.contains(.coffeeType)
-            case .country: return !usedTypes.contains(.country)
-            case .city: return true // пока не реализовано
-            }
+        if !usedTypes.contains(.coffeeType) {
+            result.append(.coffeeType)
         }
+
+        if !usedTypes.contains(.country) {
+            result.append(.country)
+        }
+
+        // Показываем By City только если выбрана ровно одна страна И еще не выбран город
+        let selectedCountries = activeFilters.filter { $0.type == .country }
+        let selectedCities = activeFilters.filter { $0.type == .city }
+
+        if selectedCountries.count == 1 && selectedCities.isEmpty {
+            result.append(.city)
+        }
+
+        return result
     }
+
+
     
     var body: some View {
         VStack(spacing: 16) {
@@ -184,82 +197,99 @@ struct ChartsTabView2: View {
             .padding(.vertical)
 
             // Селектор GroupBy
-            Menu {
-                Picker("Group by", selection: $groupBy) {
-                    ForEach(availableGroupBys, id: \.self) { group in
-                        Text(group.rawValue)
+            if !availableGroupBys.isEmpty {
+                Menu {
+                    Picker("Group by", selection: $groupBy) {
+                        ForEach(availableGroupBys, id: \.self) { group in
+                            Text(group.rawValue)
+                        }
                     }
+                } label: {
+                    HStack {
+                        Text(groupBy.rawValue)
+                            .font(.headline)
+                            .foregroundColor(.black)
+                        Image(systemName: "chevron.down")
+                            .foregroundColor(.gray)
+                        Spacer()
+                    }
+                    .padding(.horizontal)
                 }
-            } label: {
-                HStack {
-                    Text(groupBy.rawValue)
+                
+                // 🔹 Прокручиваемый список
+                ScrollView {
+                    VStack(spacing: 1) {
+                        ForEach(groupedItems()) { item in
+                            HStack {
+                                HStack(spacing: 12) {
+                                    if let icon = item.icon {
+                                        Image(icon)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 28, height: 28)
+                                    }
+                                    Text(item.label)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(alignment: .trailing, spacing: 4) {
+                                    switch measure {
+                                    case .spent:
+                                        Text(String(format: "%.2f €", item.value))
+                                    case .cups:
+                                        Text("\(Int(item.value)) cups")
+                                    case .liters:
+                                        Text(String(format: "%.1f L", item.value))
+                                    }
+                                    Text(String(format: "%.1f%%", item.percent))
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .onTapGesture {
+                                switch groupBy {
+                                case .coffeeType:
+                                    let filter = Filter(type: .coffeeType, value: item.label)
+                                    if !activeFilters.contains(filter) {
+                                        activeFilters.append(filter)
+                                        switchToNextGroupBy()
+                                    }
+                                case .country:
+                                    let filter = Filter(type: .country, value: item.label)
+                                    if !activeFilters.contains(filter) {
+                                        activeFilters.append(filter)
+                                        switchToNextGroupBy()
+                                    }
+                                case .city:
+                                    let filter = Filter(type: .city, value: item.label)
+                                    if !activeFilters.contains(filter) {
+                                        activeFilters.append(filter)
+                                        switchToNextGroupBy()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .cornerRadius(12)
+                    .padding(.horizontal)
+                    .padding(.bottom, 100)
+                }
+            } else {
+                VStack(spacing: 12) {
+                    Text("No more grouping options")
                         .font(.headline)
-                        .foregroundColor(.black)
-                    Image(systemName: "chevron.down")
+                        .foregroundColor(.secondary)
+                    Text("Try changing filters to see more options.")
+                        .font(.subheadline)
                         .foregroundColor(.gray)
-                    Spacer()
                 }
-                .padding(.horizontal)
-            }
-            
-            // 🔹 Прокручиваемый список
-            ScrollView {
-                VStack(spacing: 1) {
-                    ForEach(groupedItems()) { item in
-                        HStack {
-                            HStack(spacing: 12) {
-                                if let icon = item.icon {
-                                    Image(icon)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 28, height: 28)
-                                }
-                                Text(item.label)
-                                    .font(.body)
-                                    .foregroundColor(.primary)
-                            }
-
-                            Spacer()
-
-                            VStack(alignment: .trailing, spacing: 4) {
-                                switch measure {
-                                case .spent:
-                                    Text(String(format: "%.2f €", item.value))
-                                case .cups:
-                                    Text("\(Int(item.value)) cups")
-                                case .liters:
-                                    Text(String(format: "%.1f L", item.value))
-                                }
-                                Text(String(format: "%.1f%%", item.percent))
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                            }
-                        }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .onTapGesture {
-                            switch groupBy {
-                            case .coffeeType:
-                                let filter = Filter(type: .coffeeType, value: item.label)
-                                if !activeFilters.contains(filter) {
-                                    activeFilters.append(filter)
-                                    switchToNextGroupBy()
-                                }
-                            case .country:
-                                let filter = Filter(type: .country, value: item.label)
-                                if !activeFilters.contains(filter) {
-                                    activeFilters.append(filter)
-                                    switchToNextGroupBy()
-                                }
-                            case .city:
-                                break
-                            }
-                        }
-                    }
-                }
-                .cornerRadius(12)
-                .padding(.horizontal)
-                .padding(.bottom, 100)
+                .frame(maxWidth: .infinity, minHeight: 210)
+                .padding(.bottom, 130)
             }
         }
         .onChange(of: startDate) { _ in
@@ -289,6 +319,8 @@ struct ChartsTabView2: View {
                 filtered = filtered.filter { $0.drinkType.displayName == filter.value }
             case .country:
                 filtered = filtered.filter { $0.place.countryCode == filter.value }
+            case .city:
+                filtered = filtered.filter { $0.place.cityName == filter.value }
             }
         }
 
@@ -356,7 +388,39 @@ struct ChartsTabView2: View {
             }.sorted { $0.value > $1.value }
 
         case .city:
-            return []
+            guard let selectedCountry = activeFilters.first(where: { $0.type == .country }) else {
+                return []
+            }
+
+            let grouped = Dictionary(grouping: filtered) { $0.place.cityName ?? "Unknown" }
+            let values = grouped.map { (city, records) -> GroupedItem in
+                let value: Double
+                switch measure {
+                case .spent:
+                    value = records.map(\.price).reduce(0, +)
+                case .cups:
+                    value = Double(records.count)
+                case .liters:
+                    value = Double(records.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+                }
+                return GroupedItem(
+                    label: city,
+                    value: value,
+                    percent: 0,
+                    icon: nil,
+                    color: .gray
+                )
+            }
+            let total = values.map(\.value).reduce(0, +)
+            return values.map {
+                GroupedItem(
+                    label: $0.label,
+                    value: $0.value,
+                    percent: total == 0 ? 0 : $0.value / total * 100,
+                    icon: $0.icon,
+                    color: $0.color
+                )
+            }.sorted { $0.value > $1.value }
         }
     }
 
@@ -482,9 +546,8 @@ struct ChartsTabView2: View {
             Image(systemName: "xmark.circle.fill")
                 .foregroundColor(.gray)
                 .onTapGesture {
-                    if let index = activeFilters.firstIndex(of: filter) {
-                        activeFilters.remove(at: index)
-                        restoreGroupBy(for: filter)
+                    withAnimation {
+                        removeFilter(filter)
                     }
                 }
         }
@@ -492,6 +555,20 @@ struct ChartsTabView2: View {
         .padding(.vertical, 6)
         .background(Color.blue.opacity(0.15))
         .cornerRadius(8)
+    }
+    
+    func removeFilter(_ filter: Filter) {
+        activeFilters.removeAll { $0 == filter }
+
+        // Если удалили страну — удаляем все фильтры по городам
+        if filter.type == .country {
+            activeFilters.removeAll { $0.type == .city }
+        }
+
+        // Обновляем groupBy, если выбранное значение больше не доступно
+        if !availableGroupBys.contains(groupBy), let fallback = availableGroupBys.first {
+            groupBy = fallback
+        }
     }
     
     func switchToNextGroupBy() {
@@ -511,6 +588,11 @@ struct ChartsTabView2: View {
             if !availableGroupBys.contains(.country) {
                 groupBy = .country
             }
+        case .city:
+            if !availableGroupBys.contains(.city) {
+                groupBy = .city
+            }
+
         }
     }
 

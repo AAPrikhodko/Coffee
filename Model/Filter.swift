@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum FilterType: String {
-    case coffeeType, country
+    case coffeeType, country, city
 }
 
 struct Filter: Identifiable, Equatable {
@@ -20,6 +20,7 @@ struct Filter: Identifiable, Equatable {
         switch type {
         case .coffeeType: return value
         case .country: return value
+        case .city: return value
         }
     }
 
