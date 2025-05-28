@@ -102,6 +102,7 @@
 				Tabs/Calendar/RecordRow/RecordRowView.swift,
 				Tabs/Charts/ChartsTabView.swift,
 				Tabs/Charts/ChartsTabView2.swift,
+				Tabs/Charts/DonutChartView.swift,
 				Tabs/Charts/ProfilePreview/Profile/ProfileView.swift,
 				Tabs/Charts/ProfilePreview/ProfilePreviewView.swift,
 				Tabs/Charts/Stats/ByDrinkType/PreviewStatByDrinkTypeView.swift,

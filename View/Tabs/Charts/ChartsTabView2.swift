@@ -106,8 +106,178 @@ struct ChartsTabView2: View {
         return result
     }
 
+    var donutChartItems: [ChartPeriodItem] {
+        let currentInterval = DateInterval(start: startDate, end: endDate ?? startDate)
+        let previousInterval = calculatePreviousInterval(from: currentInterval)
+        let nextInterval = calculateNextInterval(from: currentInterval)
 
+        return [
+            ChartPeriodItem(
+                startDate: previousInterval.start,
+                endDate: previousInterval.end,
+                items: groupedItems(for: previousInterval),
+                total: totalValue(for: previousInterval)
+            ),
+            ChartPeriodItem(
+                startDate: currentInterval.start,
+                endDate: currentInterval.end,
+                items: groupedItems(for: currentInterval),
+                total: totalValue(for: currentInterval)
+            ),
+            ChartPeriodItem(
+                startDate: nextInterval.start,
+                endDate: nextInterval.end,
+                items: groupedItems(for: nextInterval),
+                total: totalValue(for: nextInterval)
+            )
+        ]
+    }
+
+    func calculatePreviousInterval(from interval: DateInterval) -> DateInterval {
+        let delta = interval.duration
+        return DateInterval(start: interval.start.addingTimeInterval(-delta), duration: delta)
+    }
+
+    func calculateNextInterval(from interval: DateInterval) -> DateInterval {
+        let delta = interval.duration
+        return DateInterval(start: interval.end, duration: delta)
+    }
     
+    func groupedItems(for interval: DateInterval) -> [GroupedItem] {
+        var filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+
+        for filter in activeFilters {
+            switch filter.type {
+            case .coffeeType:
+                filtered = filtered.filter { $0.drinkType.displayName == filter.value }
+            case .country:
+                filtered = filtered.filter { $0.place.countryCode == filter.value }
+            case .city:
+                filtered = filtered.filter { $0.place.cityName == filter.value }
+            }
+        }
+
+        switch groupBy {
+        case .coffeeType:
+            let grouped = Dictionary(grouping: filtered, by: \.drinkType)
+            let values = grouped.map { (type, records) -> GroupedItem in
+                let value: Double
+                switch measure {
+                case .spent:
+                    value = records.map(\.price).reduce(0, +)
+                case .cups:
+                    value = Double(records.count)
+                case .liters:
+                    value = Double(records.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+                }
+                return GroupedItem(
+                    label: type.displayName,
+                    value: value,
+                    percent: 0,
+                    icon: type.imageName,
+                    color: colorForDrinkType(type)
+                )
+            }
+            let total = values.map(\.value).reduce(0, +)
+            return values.map {
+                GroupedItem(
+                    label: $0.label,
+                    value: $0.value,
+                    percent: total == 0 ? 0 : $0.value / total * 100,
+                    icon: $0.icon,
+                    color: $0.color
+                )
+            }.sorted { $0.value > $1.value }
+
+        case .country:
+            let grouped = Dictionary(grouping: filtered) { $0.place.countryCode ?? "?" }
+            let values = grouped.map { (country, records) -> GroupedItem in
+                let value: Double
+                switch measure {
+                case .spent:
+                    value = records.map(\.price).reduce(0, +)
+                case .cups:
+                    value = Double(records.count)
+                case .liters:
+                    value = Double(records.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+                }
+                return GroupedItem(
+                    label: country,
+                    value: value,
+                    percent: 0,
+                    icon: nil,
+                    color: colorForCountry(country)
+                )
+            }
+            let total = values.map(\.value).reduce(0, +)
+            return values.map {
+                GroupedItem(
+                    label: $0.label,
+                    value: $0.value,
+                    percent: total == 0 ? 0 : $0.value / total * 100,
+                    icon: $0.icon,
+                    color: $0.color
+                )
+            }.sorted { $0.value > $1.value }
+
+        case .city:
+            let grouped = Dictionary(grouping: filtered) { $0.place.cityName ?? "Unknown" }
+            let values = grouped.map { (city, records) -> GroupedItem in
+                let value: Double
+                switch measure {
+                case .spent:
+                    value = records.map(\.price).reduce(0, +)
+                case .cups:
+                    value = Double(records.count)
+                case .liters:
+                    value = Double(records.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+                }
+                return GroupedItem(
+                    label: city,
+                    value: value,
+                    percent: 0,
+                    icon: nil,
+                    color: .gray
+                )
+            }
+            let total = values.map(\.value).reduce(0, +)
+            return values.map {
+                GroupedItem(
+                    label: $0.label,
+                    value: $0.value,
+                    percent: total == 0 ? 0 : $0.value / total * 100,
+                    icon: $0.icon,
+                    color: $0.color
+                )
+            }.sorted { $0.value > $1.value }
+        }
+    }
+
+    func totalValue(for interval: DateInterval) -> Double {
+        var filtered = recordsViewModel.records.filter { interval.contains($0.date) }
+
+        for filter in activeFilters {
+            switch filter.type {
+            case .coffeeType:
+                filtered = filtered.filter { $0.drinkType.displayName == filter.value }
+            case .country:
+                filtered = filtered.filter { $0.place.countryCode == filter.value }
+            case .city:
+                filtered = filtered.filter { $0.place.cityName == filter.value }
+            }
+        }
+
+        switch measure {
+        case .spent:
+            return filtered.map(\.price).reduce(0, +)
+        case .cups:
+            return Double(filtered.count)
+        case .liters:
+            return Double(filtered.map { $0.drinkSize.rawValue }.reduce(0, +)) / 1000
+        }
+    }
+
+
     var body: some View {
         VStack(spacing: 16) {
             // 🔹 Фильтры
@@ -157,18 +327,21 @@ struct ChartsTabView2: View {
             .padding(.horizontal)
 
             // 🔹 Графики
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 20) {
-                    ForEach(0..<5) { index in
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.gray.opacity(0.1))
-                            .frame(width: 280, height: 180)
-                            .overlay(Text("Chart \(index + 1)"))
-                    }
+            TabView {
+                ForEach(donutChartItems) { item in
+                    DonutChartView(items: item.items, totalValue: item.total, measure: measure)
+                        .frame(width: 300)
+                        .onTapGesture {
+                            withAnimation {
+                                self.startDate = item.startDate
+                                self.endDate = item.endDate
+                            }
+                        }
                 }
-                .padding(.horizontal)
             }
-
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 260)
+            
             // 🔹 Переключатели
             HStack {
                 Picker("Step", selection: $periodStep) {
@@ -723,4 +896,12 @@ struct GroupedItem: Identifiable {
     let percent: Double
     let icon: String?
     let color: Color
+}
+
+struct ChartPeriodItem: Identifiable {
+    let id = UUID()
+    let startDate: Date
+    let endDate: Date
+    let items: [GroupedItem]
+    let total: Double
 }
