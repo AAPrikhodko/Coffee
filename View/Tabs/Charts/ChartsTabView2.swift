@@ -105,43 +105,6 @@ struct ChartsTabView2: View {
 
         return result
     }
-
-    var donutChartItems: [ChartPeriodItem] {
-        let currentInterval = DateInterval(start: startDate, end: endDate ?? startDate)
-        let previousInterval = calculatePreviousInterval(from: currentInterval)
-        let nextInterval = calculateNextInterval(from: currentInterval)
-
-        return [
-            ChartPeriodItem(
-                startDate: previousInterval.start,
-                endDate: previousInterval.end,
-                items: groupedItems(for: previousInterval),
-                total: totalValue(for: previousInterval)
-            ),
-            ChartPeriodItem(
-                startDate: currentInterval.start,
-                endDate: currentInterval.end,
-                items: groupedItems(for: currentInterval),
-                total: totalValue(for: currentInterval)
-            ),
-            ChartPeriodItem(
-                startDate: nextInterval.start,
-                endDate: nextInterval.end,
-                items: groupedItems(for: nextInterval),
-                total: totalValue(for: nextInterval)
-            )
-        ]
-    }
-
-    func calculatePreviousInterval(from interval: DateInterval) -> DateInterval {
-        let delta = interval.duration
-        return DateInterval(start: interval.start.addingTimeInterval(-delta), duration: delta)
-    }
-
-    func calculateNextInterval(from interval: DateInterval) -> DateInterval {
-        let delta = interval.duration
-        return DateInterval(start: interval.end, duration: delta)
-    }
     
     func groupedItems(for interval: DateInterval) -> [GroupedItem] {
         var filtered = recordsViewModel.records.filter { interval.contains($0.date) }
@@ -280,96 +243,124 @@ struct ChartsTabView2: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // 🔹 Фильтры
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    periodTag()
-                        .sheet(isPresented: $showDatePicker) {
-                            DateIntervalPickerView(
-                                initialStartDate: startDate,
-                                initialEndDate: endDate,
-                                registrationDate: registrationDate
-                            ) { newStart, newEnd in
-                                startDate = newStart
-                                endDate = newEnd
-                                isManualDateChange = true
-                                syncStepWithDates()
-                            }
-                        }
-
-                    ForEach(activeFilters) { filter in
-                        filterTag(filter: filter)
-                    }
-                }
-                .padding(.horizontal)
-            }
-
-            // 🔹 Информационный блок
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(valueFormatted())
-                        .font(.title).bold()
-                    Text(measure.rawValue)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-                HStack(spacing: 12) {
-                    ForEach(Measure.allCases, id: \.self) { m in
-                        Image(systemName: icon(for: m))
-                            .padding(8)
-                            .background(m == measure ? Color.accentColor.opacity(0.2) : Color.clear)
-                            .clipShape(Circle())
-                            .onTapGesture { measure = m }
-                    }
-                }
-            }
-            .padding(.horizontal)
-
-            // 🔹 Графики
-            TabView {
-                ForEach(donutChartItems) { item in
-                    DonutChartView(items: item.items, totalValue: item.total, measure: measure)
-                        .frame(width: 300)
-                        .onTapGesture {
-                            withAnimation {
-                                self.startDate = item.startDate
-                                self.endDate = item.endDate
-                            }
+            filtersSection
+            infoSection
+            chartSection
+            controlsSection
+            groupBySelector
+            if !availableGroupBys.isEmpty {
+                ScrollView {
+                    itemsListOrEmptyState
+                        .safeAreaInset(edge: .bottom, spacing: 0) {
+                            Color.clear.frame(height: 100)
                         }
                 }
+            } else {
+                itemsListOrEmptyState
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 260)
-            
-            // 🔹 Переключатели
+        }
+        .padding(.horizontal)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            Color.clear.frame(height: 16)
+        }
+        .onChange(of: startDate) { _ in
+            if isManualDateChange {
+                isManualDateChange = false
+                syncStepWithDates()
+            }
+        }
+        .onChange(of: endDate) { _ in
+            if isManualDateChange {
+                isManualDateChange = false
+                syncStepWithDates()
+            }
+        }
+    }
+
+
+    private var filtersSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack {
-                Picker("Step", selection: $periodStep) {
-                    ForEach(PeriodStep.allCases, id: \.self) {
-                        Text($0.rawValue)
+                periodTag()
+                    .sheet(isPresented: $showDatePicker) {
+                        DateIntervalPickerView(
+                            initialStartDate: startDate,
+                            initialEndDate: endDate,
+                            registrationDate: registrationDate
+                        ) { newStart, newEnd in
+                            startDate = newStart
+                            endDate = newEnd
+                            isManualDateChange = true
+                            syncStepWithDates()
+                        }
                     }
-                }
-                .pickerStyle(.segmented)
-                .onChange(of: periodStep) { newValue in
-                    if !isManualDateChange {
-                        updateDates(for: newValue)
-                    }
-                }
 
-                Spacer()
-
-                Picker("Chart", selection: $chartType) {
-                    ForEach(ChartType.allCases, id: \.self) {
-                        Image(systemName: $0 == .bar ? "chart.bar" : "chart.pie")
-                    }
+                ForEach(activeFilters) { filter in
+                    filterTag(filter: filter)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 120)
             }
-            .padding(.horizontal)
-            .padding(.vertical)
+        }
+    }
+    
+    private var infoSection: some View {
+        HStack {
+            VStack(alignment: .leading) {
+                Text(valueFormatted())
+                    .font(.title).bold()
+                Text(measure.rawValue)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            HStack(spacing: 12) {
+                ForEach(Measure.allCases, id: \.self) { m in
+                    Image(systemName: icon(for: m))
+                        .padding(8)
+                        .background(m == measure ? Color.accentColor.opacity(0.2) : Color.clear)
+                        .clipShape(Circle())
+                        .onTapGesture { measure = m }
+                }
+            }
+        }
+    }
+    
+    private var chartSection: some View {
+        DonutChartView(
+            items: groupedItems(),
+            totalValue: totalValue,
+            measure: measure
+        )
+        .frame(height: 260)
+    }
+    
+    private var controlsSection: some View {
+        HStack {
+            Picker("Step", selection: $periodStep) {
+                ForEach(PeriodStep.allCases, id: \.self) {
+                    Text($0.rawValue)
+                }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: periodStep) { newValue in
+                if !isManualDateChange {
+                    updateDates(for: newValue)
+                }
+            }
 
-            // Селектор GroupBy
+            Spacer()
+
+            Picker("Chart", selection: $chartType) {
+                ForEach(ChartType.allCases, id: \.self) {
+                    Image(systemName: $0 == .bar ? "chart.bar" : "chart.pie")
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 120)
+        }
+    }
+    
+    private var groupBySelector: some View {
+        Group {
             if !availableGroupBys.isEmpty {
                 Menu {
                     Picker("Group by", selection: $groupBy) {
@@ -386,71 +377,61 @@ struct ChartsTabView2: View {
                             .foregroundColor(.gray)
                         Spacer()
                     }
-                    .padding(.horizontal)
                 }
-                
-                // 🔹 Прокручиваемый список
-                ScrollView {
-                    VStack(spacing: 1) {
-                        ForEach(groupedItems()) { item in
-                            HStack {
-                                HStack(spacing: 12) {
-                                    if let icon = item.icon {
-                                        Image(icon)
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 28, height: 28)
-                                    }
-                                    Text(item.label)
-                                        .font(.body)
-                                        .foregroundColor(.primary)
+            }
+        }
+    }
+    
+    private var itemsListOrEmptyState: some View {
+        Group {
+            if !availableGroupBys.isEmpty {
+                VStack(spacing: 1) {
+                    ForEach(groupedItems()) { item in
+                        HStack {
+                            HStack(spacing: 12) {
+                                if let icon = item.icon {
+                                    Image(icon)
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 28, height: 28)
                                 }
-                                
-                                Spacer()
-                                
-                                VStack(alignment: .trailing, spacing: 4) {
-                                    switch measure {
-                                    case .spent:
-                                        Text(String(format: "%.2f €", item.value))
-                                    case .cups:
-                                        Text("\(Int(item.value)) cups")
-                                    case .liters:
-                                        Text(String(format: "%.1f L", item.value))
-                                    }
-                                    Text(String(format: "%.1f%%", item.percent))
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                }
+                                Text(item.label)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
                             }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .onTapGesture {
-                                switch groupBy {
-                                case .coffeeType:
-                                    let filter = Filter(type: .coffeeType, value: item.label)
-                                    if !activeFilters.contains(filter) {
-                                        activeFilters.append(filter)
-                                        switchToNextGroupBy()
-                                    }
-                                case .country:
-                                    let filter = Filter(type: .country, value: item.label)
-                                    if !activeFilters.contains(filter) {
-                                        activeFilters.append(filter)
-                                        switchToNextGroupBy()
-                                    }
-                                case .city:
-                                    let filter = Filter(type: .city, value: item.label)
-                                    if !activeFilters.contains(filter) {
-                                        activeFilters.append(filter)
-                                        switchToNextGroupBy()
-                                    }
+
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 4) {
+                                switch measure {
+                                case .spent:
+                                    Text(String(format: "%.2f €", item.value))
+                                case .cups:
+                                    Text("\(Int(item.value)) cups")
+                                case .liters:
+                                    Text(String(format: "%.1f L", item.value))
                                 }
+                                Text(String(format: "%.1f%%", item.percent))
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .onTapGesture {
+                            let filter: Filter
+                            switch groupBy {
+                            case .coffeeType: filter = .init(type: .coffeeType, value: item.label)
+                            case .country:    filter = .init(type: .country, value: item.label)
+                            case .city:       filter = .init(type: .city, value: item.label)
+                            }
+                            if !activeFilters.contains(filter) {
+                                activeFilters.append(filter)
+                                switchToNextGroupBy()
                             }
                         }
                     }
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                    .padding(.bottom, 100)
                 }
             } else {
                 VStack(spacing: 12) {
@@ -461,20 +442,7 @@ struct ChartsTabView2: View {
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
-                .frame(maxWidth: .infinity, minHeight: 210)
-                .padding(.bottom, 130)
-            }
-        }
-        .onChange(of: startDate) { _ in
-            if isManualDateChange {
-                isManualDateChange = false
-                syncStepWithDates()
-            }
-        }
-        .onChange(of: endDate) { _ in
-            if isManualDateChange {
-                isManualDateChange = false
-                syncStepWithDates()
+                .frame(maxWidth: .infinity, minHeight: 275)
             }
         }
     }

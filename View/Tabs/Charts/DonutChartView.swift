@@ -43,13 +43,9 @@ struct DonutChartView: View {
             }
             .frame(height: 220)
             .chartAngleSelection(value: $selectedID)
-            .chartBackground { proxy in
-                GeometryReader { geo in
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedID = nil
-                        }
+            .chartBackground { chartProxy in
+                GeometryReader { geometry in
+                    let frame = geometry[chartProxy.plotAreaFrame]
                 }
             }
         }
